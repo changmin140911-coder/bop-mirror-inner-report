@@ -13,7 +13,7 @@ import type {
 } from "@/lib/report-types";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 function parseAnswers(raw: string | null): QuestionnaireAnswer[] {
   if (!raw) {

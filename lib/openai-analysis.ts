@@ -127,13 +127,49 @@ const reportSchema = {
     recommendation: {
       type: "object",
       additionalProperties: false,
-      required: ["hair", "makeup", "profileMood", "narrative", "moodboardPrompt"],
+      required: [
+        "hair",
+        "makeup",
+        "profileMood",
+        "narrative",
+        "moodboardPrompt",
+        "toneReason",
+        "outfitDetails",
+        "beautyDetails",
+        "moodDetails",
+        "photoDirection"
+      ],
       properties: {
         hair: { type: "string" },
         makeup: { type: "string" },
         profileMood: { type: "string" },
         narrative: { type: "string" },
-        moodboardPrompt: { type: "string" }
+        moodboardPrompt: { type: "string" },
+        toneReason: { type: "string" },
+        outfitDetails: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 3,
+          maxItems: 3
+        },
+        beautyDetails: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 3,
+          maxItems: 3
+        },
+        moodDetails: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 3,
+          maxItems: 3
+        },
+        photoDirection: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 3,
+          maxItems: 3
+        }
       }
     },
     security: {
@@ -159,6 +195,24 @@ function getAnalysisPrompt(payload: AnalysisPayload) {
   const questionnaireSummary = payload.answers
     .map((answer) => `${answer.prompt}: ${answer.label}`)
     .join("\n");
+
+  const depthRules =
+    robot.id === "detail"
+      ? `
+Detail mode quality rules:
+- Write like a paid premium consulting report.
+- Mention concrete visible photo clues: contrast, lightness, facial line balance, feature focus, and tone harmony.
+- Give richer, more specific styling directions that feel personally selected.
+- Make the user feel "I want to book this" without using fear or heavy diagnostic wording.`
+      : robot.id === "standard"
+        ? `
+Standard mode quality rules:
+- Keep a polished editorial tone.
+- Explain the main photo-based clues and practical style direction clearly.`
+        : `
+Quick mode quality rules:
+- Keep it short, useful, and easy to scan.
+- Focus on the highest-impact tone, outfit, and mood suggestions.`;
 
   return `
 You are creating a premium AI style and image report in Korean from the user's uploaded photo.
@@ -187,6 +241,7 @@ Selected analysis robot:
 ${robot.name} (${robot.nickname})
 ${robot.description}
 ${robot.promise}
+${depthRules}
 
 Questionnaire:
 ${questionnaireSummary}
@@ -199,6 +254,8 @@ Report rules:
 - Every report sentence must feel like it came from the uploaded photo, not a generic horoscope.
 - color.note must explain that the palette is based on visible photo signals and lighting may affect precision.
 - recommendation.hair, recommendation.makeup, and recommendation.profileMood must be concrete and practical.
+- recommendation.toneReason should explain why the selected palette suits the visible photo.
+- recommendation.outfitDetails, beautyDetails, moodDetails, and photoDirection must each contain exactly 3 concrete Korean recommendations.
 - If the selected robot is "quick", keep sentences shorter and more summary-like.
 - If the selected robot is "detail", add more nuanced visual branding language.
 - recommendation.moodboardPrompt should describe a premium editorial moodboard, not a transformed portrait of the uploaded user.
@@ -255,6 +312,26 @@ function clampScore(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
+function getConfiguredAnalysisModel(robot: ReturnType<typeof getRobotByDepth>) {
+  const perDepth = {
+    detail: process.env.OPENAI_DETAIL_MODEL,
+    standard: process.env.OPENAI_STANDARD_MODEL,
+    quick: process.env.OPENAI_QUICK_MODEL
+  }[robot.id];
+
+  return perDepth || process.env.OPENAI_ANALYSIS_MODEL_OVERRIDE || robot.model;
+}
+
+function getConfiguredImageModel(robot: ReturnType<typeof getRobotByDepth>) {
+  const perDepth = {
+    detail: process.env.OPENAI_DETAIL_IMAGE_MODEL,
+    standard: process.env.OPENAI_STANDARD_IMAGE_MODEL,
+    quick: process.env.OPENAI_QUICK_IMAGE_MODEL
+  }[robot.id];
+
+  return perDepth || process.env.OPENAI_IMAGE_MODEL_OVERRIDE || robot.imageModel;
+}
+
 export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<AnalysisResponse> {
   const client = getOpenAIClient();
   const selectedRobot = getRobotByDepth(payload.analysisDepth);
@@ -270,15 +347,15 @@ export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<Analy
     };
   }
 
-  const analysisModel = process.env.OPENAI_ANALYSIS_MODEL_OVERRIDE || selectedRobot.model;
-  const imageModel = process.env.OPENAI_IMAGE_MODEL_OVERRIDE || "gpt-image-1.5";
+  const analysisModel = getConfiguredAnalysisModel(selectedRobot);
+  const imageModel = getConfiguredImageModel(selectedRobot);
 
   try {
     const dataUrl = `data:${payload.imageMimeType};base64,${payload.imageBase64}`;
     const response = await client.responses.create({
       model: analysisModel,
       reasoning: {
-        effort: selectedRobot.id === "detail" ? "high" : "medium"
+        effort: selectedRobot.id === "detail" ? "high" : selectedRobot.id === "quick" ? "low" : "medium"
       },
       text: {
         format: {
@@ -322,7 +399,7 @@ Create a refined women's styling moodboard with realistic editorial references:
 4. atmosphere and location inspiration
 Do not recreate or identify the uploaded person. Do not imply medical or psychological diagnosis.`,
         size: "1536x1024",
-        quality: selectedRobot.id === "detail" ? "high" : selectedRobot.id === "quick" ? "low" : "medium"
+        quality: selectedRobot.imageQuality
       });
 
       const base64Image = imageResult.data?.[0]?.b64_json;

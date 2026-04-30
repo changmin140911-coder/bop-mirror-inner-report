@@ -13,6 +13,8 @@ export type AnalysisRobot = {
   nickname: string;
   icon: "eye" | "pen" | "zap";
   model: string;
+  imageModel: string;
+  imageQuality: "low" | "medium" | "high";
   pace: string;
   description: string;
   promise: string;
@@ -24,7 +26,9 @@ export const analysisRobots: AnalysisRobot[] = [
     name: "눈썰미 최고",
     nickname: "고급 모델",
     icon: "eye",
-    model: "gpt-5.2",
+    model: "gpt-5.5-pro",
+    imageModel: "gpt-image-2",
+    imageQuality: "high",
     pace: "가장 섬세함",
     description: "시간이 조금 걸리지만 얼굴의 작은 균형과 분위기까지 자세히 읽어요.",
     promise: "당신도 몰랐던 매력 포인트를 깊게 찾아냅니다."
@@ -34,7 +38,9 @@ export const analysisRobots: AnalysisRobot[] = [
     name: "글 잘 쓰는",
     nickname: "일반 모델",
     icon: "pen",
-    model: "gpt-5",
+    model: "gpt-5.4",
+    imageModel: "gpt-image-1.5",
+    imageQuality: "medium",
     pace: "균형형",
     description: "얼굴 특징을 잘 잡아내고 이해하기 쉬운 설명형 리포트로 정리해요.",
     promise: "처음 보는 사람도 바로 이해할 수 있는 문장으로 풀어냅니다."
@@ -44,7 +50,9 @@ export const analysisRobots: AnalysisRobot[] = [
     name: "핵심만 콕",
     nickname: "간단 모델",
     icon: "zap",
-    model: "gpt-5-nano",
+    model: "gpt-5.4-nano",
+    imageModel: "gpt-image-1-mini",
+    imageQuality: "low",
     pace: "가장 빠름",
     description: "바쁜 순간에도 꼭 필요한 정보만 모아 빠르게 요약해요.",
     promise: "인상 밸런스, 키워드, 추천 방향을 짧고 선명하게 보여줍니다."
@@ -101,6 +109,11 @@ export type ReportData = {
     profileMood: string;
     narrative: string;
     moodboardPrompt: string;
+    toneReason?: string;
+    outfitDetails?: string[];
+    beautyDetails?: string[];
+    moodDetails?: string[];
+    photoDirection?: string[];
   };
   security: {
     storageMode: string;
@@ -540,7 +553,29 @@ export function buildFallbackReport(payload?: Partial<AnalysisPayload>): ReportD
       profileMood: preset.profileMood,
       narrative: preset.narrative,
       moodboardPrompt:
-        "Luxury editorial branding moodboard, refined beauty direction, tactile neutrals, polished lighting, premium magazine composition"
+        "Luxury editorial branding moodboard, refined beauty direction, tactile neutrals, polished lighting, premium magazine composition",
+      toneReason:
+        "사진에서 읽히는 명도와 대비감을 기준으로 얼굴빛이 맑아 보이는 방향을 우선 추천합니다.",
+      outfitDetails: [
+        `${preset.seasonLabel} 팔레트가 자연스럽게 이어지는 상의 컬러`,
+        "목선과 어깨선을 정돈해 주는 깔끔한 실루엣",
+        "작지만 시선이 머무는 포인트 액세서리"
+      ],
+      beautyDetails: [
+        preset.hair,
+        preset.makeup,
+        "피부 결을 덮기보다 맑게 정리하는 베이스 표현"
+      ],
+      moodDetails: [
+        preset.profileMood,
+        "배경은 복잡하지 않게, 빛은 얼굴 중앙에 부드럽게",
+        "과한 표정보다 자연스럽게 시선이 머무는 컷"
+      ],
+      photoDirection: [
+        "정면보다 살짝 사선의 얼굴 각도",
+        "턱선과 어깨선이 자연스럽게 이어지는 포즈",
+        "옷과 배경의 톤을 한 단계만 차이 나게 구성"
+      ]
     },
     security: {
       storageMode,

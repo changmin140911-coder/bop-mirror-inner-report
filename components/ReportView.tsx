@@ -1,6 +1,17 @@
 "use client";
 
-import { ArrowRight, Bot, Download, Heart, Lock, Palette, Shirt, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  Bot,
+  Camera,
+  Download,
+  Heart,
+  Home,
+  Lock,
+  Palette,
+  Shirt,
+  Sparkles
+} from "lucide-react";
 import html2canvas from "html2canvas";
 import type { ReportData } from "@/lib/report-types";
 
@@ -36,24 +47,30 @@ function buildStyleGuide(report: ReportData) {
       "메이크업과 옷에 함께 쓰기 좋은 연결 톤",
       "차분하게 마무리해 주는 음영 톤"
     ],
-    outfits: [
+    outfits: report.recommendation.outfitDetails ?? [
       `${report.color.seasonLabel} 팔레트를 활용한 톤온톤 스타일`,
       silhouetteHint,
       `${report.profile.keywords[1]}이 살아나는 작고 정제된 액세서리`
     ],
-    beauty: [
+    beauty: report.recommendation.beautyDetails ?? [
       report.recommendation.hair,
       report.recommendation.makeup,
       `${report.color.undertone} 톤을 살린 립과 블러셔 조합`
     ],
     mood:
-      moodItems.length > 0
+      report.recommendation.moodDetails ??
+      (moodItems.length > 0
         ? moodItems
         : [
             report.recommendation.profileMood,
             "정돈된 배경과 부드러운 조명",
             "과한 연출보다 자연스러운 시선 처리"
-          ]
+          ]),
+    photo: report.recommendation.photoDirection ?? [
+      "얼굴은 살짝 사선으로 두어 윤곽을 부드럽게 정리",
+      "상체와 어깨선은 힘을 빼고 자연스럽게",
+      "옷과 배경의 톤 차이를 한 단계만 주기"
+    ]
   };
 }
 
@@ -122,7 +139,7 @@ export function ReportView({ report }: { report: ReportData }) {
   const secretProfile = {
     title: `숨은 취향 코드 ${report.inner.enneagramType}-${report.inner.wing.replace(/\D/g, "")}`,
     summary:
-      "마음 모양 테스트보다 한층 깊게, 당신이 무엇을 원하고 어디에서 에너지가 소모되는지 읽어보는 단계입니다.",
+      "취향 질문보다 한층 깊게, 당신이 무엇을 원하고 어떤 스타일에서 더 자연스러워지는지 읽어보는 단계입니다.",
     points: [
       report.inner.expressionDesire,
       report.inner.stressSignal,
@@ -186,6 +203,9 @@ export function ReportView({ report }: { report: ReportData }) {
               ))}
             </div>
             <p className="subtleCopy">{report.color.note}</p>
+            {report.recommendation.toneReason ? (
+              <p className="toneReason">{report.recommendation.toneReason}</p>
+            ) : null}
           </article>
 
           <article className="panel imagePanel">
@@ -255,6 +275,17 @@ export function ReportView({ report }: { report: ReportData }) {
                   ))}
                 </ul>
               </div>
+              <div className="miniInfoCard wideMiniCard">
+                <div className="miniInfoHeader">
+                  <Camera size={16} />
+                  <strong>사진 무드 가이드</strong>
+                </div>
+                <ul className="plainList compact">
+                  {styleGuide.photo.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </article>
         </div>
@@ -304,7 +335,7 @@ export function ReportView({ report }: { report: ReportData }) {
           <article className="panel actionPanel">
             <p className="eyebrow">Export & Next</p>
             <h3>결과 저장과 심화 분석</h3>
-              <p>결과 이미지를 저장하고, 필요하면 더 구체적인 스타일 코칭으로 이어갈 수 있어요.</p>
+            <p>결과 이미지를 저장하고, 필요하면 더 구체적인 스타일 코칭으로 이어갈 수 있어요.</p>
             <div className="heroActions">
               <button className="primaryButton" onClick={captureSnapshot} type="button">
                 <Download size={18} />
@@ -316,6 +347,10 @@ export function ReportView({ report }: { report: ReportData }) {
               >
                 <ArrowRight size={18} />
                 스타일 코칭 신청하기
+              </a>
+              <a className="secondaryButton" href="/">
+                <Home size={18} />
+                처음으로 돌아가기
               </a>
             </div>
             <div className="securityNote">

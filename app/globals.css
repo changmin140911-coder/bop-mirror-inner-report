@@ -880,6 +880,14 @@ label {
   font-size: 0.94rem;
 }
 
+.toneReason {
+  border-left: 3px solid rgba(199, 125, 132, 0.42);
+  margin: 14px 0 0;
+  padding-left: 12px;
+  color: var(--ink);
+  font-size: 0.94rem;
+}
+
 .generatedImage {
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -914,6 +922,10 @@ label {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-top: 16px;
+}
+
+.wideMiniCard {
+  grid-column: 1 / -1;
 }
 
 .miniInfoCard,
