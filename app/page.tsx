@@ -149,7 +149,7 @@ export default function Home() {
   const [report, setReport] = useState<ReportData>(buildFallbackReport());
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [statusMessage, setStatusMessage] = useState(
-    "이미지와 성향 답변을 결합해 브랜딩 리포트를 생성할 준비가 되어 있습니다."
+    "마음 모양 테스트를 먼저 선택하면, 이후 얼굴 분석 결과와 합쳐 더 섬세한 리포트가 완성됩니다."
   );
   const [engineNote, setEngineNote] = useState("데모 리포트가 로드되어 있습니다.");
   const [errorMessage, setErrorMessage] = useState("");
@@ -278,12 +278,24 @@ export default function Home() {
 
       <section className="hero section">
         <div className="heroCopy">
-          <p className="eyebrow">Mirror x Inner Report Engine</p>
-          <h1>이미지를 브랜드 언어로 번역하는 리포트</h1>
+          <p className="eyebrow">Mind Shape First</p>
+          <h1>당신의 마음 모양을 먼저 알아볼까요?</h1>
           <p className="lead">
-            얼굴 구조, 선감, 톤, 자기표현 응답을 하나의 분석 흐름으로 묶어 텍스트 리포트와
-            무드 이미지까지 함께 생성합니다.
+            사진을 올리기 전, 간단한 질문으로 당신이 어떤 분위기와 표현 방식을 가진 사람인지
+            먼저 읽어봅니다. 이 결과는 나중에 얼굴 분석과 합쳐져 더 완성도 높은 스타일 리포트가 됩니다.
           </p>
+          <a className="heartButton" href="#heart-test">
+            <Sparkles size={19} />
+            사진 올리기 전, 내 '마음 모양' 테스트하기
+            <ArrowRight size={18} />
+          </a>
+          <div className="heartIntro">
+            <strong>부담 없이 시작하는 첫 단계</strong>
+            <p>
+              인터넷에서 쉽게 해보는 성격 유형 테스트처럼, 몇 가지 선택만으로 내면의 방향을 먼저
+              정리합니다. 얼굴 분석은 그 다음에 더 정확하게 이어집니다.
+            </p>
+          </div>
           <div className="statusCard">
             <div className="statusRow">
               <Sparkles size={16} />
@@ -318,11 +330,15 @@ export default function Home() {
         <AnalysisOverlay previewUrl={previewUrl} />
       </section>
 
-      <section className="section gridLayout">
+      <section id="heart-test" className="section gridLayout">
         <article className="panel intakePanel">
           <div className="panelHeader">
-            <p className="eyebrow">Intake</p>
-            <h2>업로드와 성향 입력</h2>
+            <p className="eyebrow">Step 01. Mind Shape</p>
+            <h2>내 마음 모양 테스트</h2>
+            <p>
+              먼저 질문에 답하며 지금의 표현 욕구와 브랜딩 방향을 가볍게 정리해보세요.
+              사진은 이후 단계에서 올리면 됩니다.
+            </p>
           </div>
 
           <div className="fieldGrid">

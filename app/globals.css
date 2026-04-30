@@ -148,6 +148,56 @@ label {
   font-size: 1.12rem;
 }
 
+.heartButton {
+  width: min(100%, 540px);
+  min-height: 62px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 28px;
+  padding: 0 24px;
+  color: var(--ivory);
+  background:
+    linear-gradient(135deg, rgba(23, 23, 23, 0.92), rgba(199, 125, 132, 0.92)),
+    var(--rose);
+  box-shadow:
+    0 18px 42px rgba(199, 125, 132, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  font-weight: 800;
+  text-align: center;
+}
+
+.heartButton svg {
+  flex: 0 0 auto;
+  color: var(--ivory);
+}
+
+.heartIntro {
+  width: min(100%, 620px);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 8px;
+  margin-top: 16px;
+  padding: 18px 20px;
+  background:
+    linear-gradient(135deg, rgba(255, 253, 249, 0.78), rgba(240, 201, 203, 0.28)),
+    rgba(255, 255, 255, 0.48);
+  box-shadow: 0 18px 44px rgba(60, 48, 45, 0.07);
+}
+
+.heartIntro strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.heartIntro p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.96rem;
+}
+
 .statusCard,
 .panel,
 .previewFrame,
@@ -379,6 +429,11 @@ label {
 
 .panelHeader {
   margin-bottom: 18px;
+}
+
+.panelHeader p:last-child {
+  margin-bottom: 0;
+  color: var(--muted);
 }
 
 .fieldGrid {
@@ -788,7 +843,15 @@ label {
 
   .primaryButton,
   .secondaryButton,
+  .heartButton,
   .optionChip {
     width: 100%;
+  }
+
+  .heartButton {
+    min-height: auto;
+    border-radius: 8px;
+    padding: 16px;
+    flex-wrap: wrap;
   }
 }
