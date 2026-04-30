@@ -1,16 +1,18 @@
 :root {
-  --paper: #f7f1e8;
-  --ivory: #fffaf3;
-  --sand: #dac8b4;
-  --stone: #ede2d4;
-  --sage: #cad7d1;
-  --charcoal: #191715;
-  --ink: #37322d;
-  --muted: #6c655d;
-  --line: rgba(25, 23, 21, 0.12);
-  --line-strong: rgba(25, 23, 21, 0.18);
-  --panel: rgba(255, 250, 243, 0.74);
-  --shadow: 0 24px 70px rgba(25, 23, 21, 0.08);
+  --paper: #fbf8f3;
+  --ivory: #fffdf9;
+  --blush: #f0c9cb;
+  --rose: #c77d84;
+  --sage: #b9d6cb;
+  --sky: #bfd4df;
+  --butter: #eadb9f;
+  --charcoal: #171717;
+  --ink: #30302f;
+  --muted: #6f6964;
+  --line: rgba(23, 23, 23, 0.11);
+  --line-strong: rgba(23, 23, 23, 0.18);
+  --panel: rgba(255, 253, 249, 0.76);
+  --shadow: 0 22px 60px rgba(60, 48, 45, 0.1);
 }
 
 * {
@@ -25,9 +27,10 @@ body {
   margin: 0;
   color: var(--charcoal);
   background:
-    radial-gradient(circle at top left, rgba(202, 215, 209, 0.9), transparent 32%),
-    radial-gradient(circle at top right, rgba(218, 200, 180, 0.7), transparent 28%),
-    linear-gradient(180deg, #fcf7ef 0%, #f2e7d9 100%);
+    linear-gradient(115deg, rgba(240, 201, 203, 0.4), transparent 34%),
+    radial-gradient(circle at 14% 8%, rgba(185, 214, 203, 0.72), transparent 30%),
+    radial-gradient(circle at 90% 12%, rgba(191, 212, 223, 0.64), transparent 27%),
+    linear-gradient(180deg, #fffaf5 0%, #f8f4ec 48%, #f3f8f5 100%);
   font-family: var(--font-body), sans-serif;
   letter-spacing: 0;
 }
@@ -62,12 +65,12 @@ img {
   position: fixed;
   inset: 0;
   z-index: -1;
-  opacity: 0.08;
+  opacity: 0.055;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(25, 23, 21, 0.36) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(25, 23, 21, 0.36) 1px, transparent 1px);
-  background-size: 9px 9px;
+    linear-gradient(rgba(23, 23, 23, 0.26) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 23, 23, 0.26) 1px, transparent 1px);
+  background-size: 10px 10px;
   mask-image: linear-gradient(to bottom, transparent, black 16%, black 82%, transparent);
 }
 
@@ -151,7 +154,9 @@ label {
 .snapshotCard {
   border: 1px solid rgba(255, 255, 255, 0.56);
   border-radius: 8px;
-  background: var(--panel);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 253, 249, 0.78)),
+    var(--panel);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
 }
@@ -209,8 +214,8 @@ label {
 .primaryButton {
   padding: 0 22px;
   color: var(--ivory);
-  background: linear-gradient(135deg, #29231d, #53473b);
-  box-shadow: 0 18px 30px rgba(25, 23, 21, 0.18);
+  background: linear-gradient(135deg, #191717, #5f5152);
+  box-shadow: 0 18px 30px rgba(199, 125, 132, 0.22);
 }
 
 .secondaryButton {
@@ -230,6 +235,9 @@ label {
   min-height: 640px;
   overflow: hidden;
   isolation: isolate;
+  background:
+    linear-gradient(145deg, rgba(240, 201, 203, 0.44), rgba(185, 214, 203, 0.42)),
+    var(--ivory);
 }
 
 .previewImage,
@@ -258,8 +266,8 @@ label {
   padding: 26px;
   text-align: center;
   background:
-    linear-gradient(180deg, rgba(255, 250, 243, 0.72), rgba(255, 250, 243, 0.24)),
-    radial-gradient(circle at top, rgba(202, 215, 209, 0.45), transparent 42%);
+    linear-gradient(180deg, rgba(255, 253, 249, 0.74), rgba(255, 253, 249, 0.26)),
+    radial-gradient(circle at top, rgba(240, 201, 203, 0.52), transparent 42%);
 }
 
 .uploadPlaceholder strong {
@@ -277,8 +285,10 @@ label {
   right: 16px;
   top: 12%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(202, 215, 209, 0.96), transparent);
-  box-shadow: 0 0 24px rgba(202, 215, 209, 0.88);
+  background: linear-gradient(90deg, transparent, rgba(255, 250, 252, 0.98), transparent);
+  box-shadow:
+    0 0 22px rgba(240, 201, 203, 0.9),
+    0 0 44px rgba(191, 212, 223, 0.7);
   animation: scan 4s ease-in-out infinite;
 }
 
@@ -319,8 +329,8 @@ label {
   width: 9px;
   height: 9px;
   border-radius: 50%;
-  background: #dff3ed;
-  box-shadow: 0 0 18px rgba(223, 243, 237, 0.86);
+  background: #fff8fa;
+  box-shadow: 0 0 18px rgba(240, 201, 203, 0.9);
 }
 
 .eyeLeft {
@@ -447,7 +457,7 @@ label {
 
 .optionChip.active {
   color: var(--ivory);
-  background: linear-gradient(135deg, #3a3129, #6a5b4b);
+  background: linear-gradient(135deg, #2e2a2b, #b86f78);
 }
 
 .consentRow {
@@ -602,7 +612,7 @@ label {
 .gaugeFill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #cdded7, #d9c3ac, #7d8d98);
+  background: linear-gradient(90deg, var(--sage), var(--blush), var(--sky));
 }
 
 .paletteRow {

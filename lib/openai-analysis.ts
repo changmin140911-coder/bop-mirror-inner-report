@@ -249,7 +249,7 @@ export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<Analy
   }
 
   const analysisModel = process.env.OPENAI_ANALYSIS_MODEL || "gpt-5.4";
-  const imageModel = process.env.OPENAI_IMAGE_MODEL || "gpt-image-2";
+  const imageModel = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1.5";
 
   try {
     const dataUrl = `data:${payload.imageMimeType};base64,${payload.imageBase64}`;
