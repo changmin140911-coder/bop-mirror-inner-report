@@ -3,18 +3,24 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import {
   ArrowRight,
+  Bot,
   Camera,
   Download,
+  Eye,
   ImagePlus,
   Lock,
+  PenLine,
   ScanFace,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Zap
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import {
-  questionnaire,
+  analysisRobots,
   buildFallbackReport,
+  questionnaire,
+  type AnalysisDepth,
   type AnalysisResponse,
   type HistoryItem,
   type QuestionnaireAnswer,
@@ -28,6 +34,28 @@ const scoreLabels = {
   elegance: "세련미",
   approachability: "접근성"
 } as const;
+
+const defaultAnswerValues: Record<QuestionnaireId, string> = {
+  presence: "refined",
+  decision: "structure",
+  tension: "safe",
+  energy: "authority",
+  expression: "editorial"
+};
+
+const defaultAnswerLabels: Record<QuestionnaireId, string> = {
+  presence: "정제된 신뢰감",
+  decision: "완성도와 기준",
+  tension: "너무 무난하게 보임",
+  energy: "전문성과 밀도",
+  expression: "도시적 에디토리얼"
+};
+
+function RobotIcon({ icon }: { icon: "eye" | "pen" | "zap" }) {
+  if (icon === "eye") return <Eye size={22} />;
+  if (icon === "pen") return <PenLine size={22} />;
+  return <Zap size={22} />;
+}
 
 function GaugeBar({ label, value }: { label: string; value: number }) {
   return (
@@ -61,12 +89,12 @@ function ResultSnapshot({ report }: { report: ReportData }) {
       </div>
       <div className="snapshotMeta">
         <div>
-          <span>Potential Gap</span>
-          <strong>{report.dissonance.gapScore}</strong>
+          <span>AI Robot</span>
+          <strong>{report.robotName ?? "글 잘 쓰는"}</strong>
         </div>
         <div>
-          <span>Persona</span>
-          <strong>{report.profile.archetypeLine}</strong>
+          <span>Potential Gap</span>
+          <strong>{report.dissonance.gapScore}</strong>
         </div>
       </div>
     </article>
@@ -75,9 +103,7 @@ function ResultSnapshot({ report }: { report: ReportData }) {
 
 async function captureSnapshot() {
   const target = document.getElementById("result-snapshot");
-  if (!target) {
-    return;
-  }
+  if (!target) return;
 
   const canvas = await html2canvas(target, {
     scale: 2,
@@ -118,8 +144,8 @@ function AnalysisOverlay({ previewUrl }: { previewUrl: string | null }) {
       {!previewUrl ? (
         <div className="uploadPlaceholder">
           <ImagePlus size={28} />
-          <strong>정면 사진을 업로드하면 분석 오버레이가 여기에 표시됩니다.</strong>
-          <span>밝은 자연광, 눈/코/입이 잘 보이는 단일 인물 사진이 가장 좋습니다.</span>
+          <strong>정면 사진을 업로드하면 분석 오버레이가 표시됩니다.</strong>
+          <span>밝은 자연광, 눈·코·입이 잘 보이는 단일 인물 사진이 가장 좋아요.</span>
         </div>
       ) : null}
     </div>
@@ -130,20 +156,11 @@ export default function Home() {
   const [nickname, setNickname] = useState("");
   const [brandFocus, setBrandFocus] = useState("");
   const [consentToStore, setConsentToStore] = useState(true);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<QuestionnaireId, string>>({
-    presence: "refined",
-    decision: "structure",
-    tension: "safe",
-    energy: "authority",
-    expression: "editorial"
-  });
-  const [selectedLabels, setSelectedLabels] = useState<Record<QuestionnaireId, string>>({
-    presence: "정제된 신뢰감",
-    decision: "완성도와 기준",
-    tension: "너무 무난하게 보임",
-    energy: "전문성과 밀도",
-    expression: "도시적 에디토리얼"
-  });
+  const [selectedAnswers, setSelectedAnswers] =
+    useState<Record<QuestionnaireId, string>>(defaultAnswerValues);
+  const [selectedLabels, setSelectedLabels] =
+    useState<Record<QuestionnaireId, string>>(defaultAnswerLabels);
+  const [selectedRobot, setSelectedRobot] = useState<AnalysisDepth>("standard");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [report, setReport] = useState<ReportData>(buildFallbackReport());
@@ -151,7 +168,7 @@ export default function Home() {
   const [statusMessage, setStatusMessage] = useState(
     "마음 모양 테스트를 먼저 선택하면, 이후 얼굴 분석 결과와 합쳐 더 섬세한 리포트가 완성됩니다."
   );
-  const [engineNote, setEngineNote] = useState("데모 리포트가 로드되어 있습니다.");
+  const [engineNote, setEngineNote] = useState("사진을 올린 뒤 원하는 AI 로봇을 골라주세요.");
   const [errorMessage, setErrorMessage] = useState("");
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -163,13 +180,9 @@ export default function Home() {
       try {
         const response = await fetch("/api/reports", { cache: "no-store" });
         const data = (await response.json()) as { reports: HistoryItem[] };
-        if (active) {
-          setHistory(data.reports);
-        }
+        if (active) setHistory(data.reports);
       } catch {
-        if (active) {
-          setHistory([]);
-        }
+        if (active) setHistory([]);
       }
     }
 
@@ -182,9 +195,7 @@ export default function Home() {
 
   useEffect(() => {
     return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
   }, [previewUrl]);
 
@@ -195,18 +206,14 @@ export default function Home() {
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const nextFile = event.target.files?.[0];
-    if (!nextFile) {
-      return;
-    }
+    if (!nextFile) return;
 
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
 
     setSelectedFile(nextFile);
     setPreviewUrl(URL.createObjectURL(nextFile));
     setErrorMessage("");
-    setStatusMessage("사진이 준비되었습니다. 이제 분석을 시작하면 결과가 생성됩니다.");
+    setStatusMessage("사진이 준비되었습니다. 이제 세 명의 AI 로봇 중 한 명을 골라주세요.");
   }
 
   function buildAnswers(): QuestionnaireAnswer[] {
@@ -224,8 +231,9 @@ export default function Home() {
       return;
     }
 
+    const robot = analysisRobots.find((item) => item.id === selectedRobot);
     setErrorMessage("");
-    setStatusMessage("얼굴 구조와 질문 응답을 함께 읽어 리포트를 생성하고 있습니다.");
+    setStatusMessage(`${robot?.name ?? "AI"} 로봇이 얼굴 구조와 마음 모양을 함께 읽고 있습니다.`);
 
     startTransition(() => {
       void (async () => {
@@ -234,6 +242,7 @@ export default function Home() {
         formData.set("nickname", nickname);
         formData.set("brandFocus", brandFocus);
         formData.set("consentToStore", String(consentToStore));
+        formData.set("analysisDepth", selectedRobot);
         formData.set("answers", JSON.stringify(buildAnswers()));
 
         try {
@@ -282,7 +291,7 @@ export default function Home() {
           <h1>당신의 마음 모양을 먼저 알아볼까요?</h1>
           <p className="lead">
             사진을 올리기 전, 간단한 질문으로 당신이 어떤 분위기와 표현 방식을 가진 사람인지
-            먼저 읽어봅니다. 이 결과는 나중에 얼굴 분석과 합쳐져 더 완성도 높은 스타일 리포트가 됩니다.
+            먼저 읽어봅니다. 이 결과는 얼굴 분석과 합쳐져 더 완성도 높은 스타일 리포트가 됩니다.
           </p>
           <a className="heartButton" href="#heart-test">
             <Sparkles size={19} />
@@ -292,8 +301,8 @@ export default function Home() {
           <div className="heartIntro">
             <strong>부담 없이 시작하는 첫 단계</strong>
             <p>
-              인터넷에서 쉽게 해보는 성격 유형 테스트처럼, 몇 가지 선택만으로 내면의 방향을 먼저
-              정리합니다. 얼굴 분석은 그 다음에 더 정확하게 이어집니다.
+              성격 유형 테스트처럼 몇 가지 선택만으로 내면의 방향을 먼저 정리합니다.
+              얼굴 분석은 그 다음에 더 정확하게 이어집니다.
             </p>
           </div>
           <div className="statusCard">
@@ -356,7 +365,7 @@ export default function Home() {
               <input
                 value={brandFocus}
                 onChange={(event) => setBrandFocus(event.target.value)}
-                placeholder="예: 1:1 컨설팅 전환이 잘 되는 프로필 이미지"
+                placeholder="예: 프로필 사진 분위기를 정리하고 싶어요"
               />
             </label>
           </div>
@@ -373,6 +382,39 @@ export default function Home() {
             <strong>{selectedFile ? selectedFile.name : "정면 사진 업로드"}</strong>
             <span>PNG, JPG, WEBP / 최대 6MB</span>
           </label>
+
+          {selectedFile ? (
+            <section className="robotPicker" aria-label="AI 분석 로봇 선택">
+              <div className="robotHeader">
+                <p className="eyebrow">Step 02. Smart Choice</p>
+                <h3>AI 로봇이 얼마나 자세하게 분석할지 골라주세요.</h3>
+              </div>
+              <div className="robotGrid">
+                {analysisRobots.map((robot) => {
+                  const active = selectedRobot === robot.id;
+                  return (
+                    <button
+                      className={active ? "robotCard active" : "robotCard"}
+                      key={robot.id}
+                      onClick={() => setSelectedRobot(robot.id)}
+                      type="button"
+                    >
+                      <span className="robotIcon">
+                        <RobotIcon icon={robot.icon} />
+                      </span>
+                      <span className="robotTitle">
+                        <strong>{robot.name}</strong>
+                        <em>{robot.nickname}</em>
+                      </span>
+                      <span className="robotPace">{robot.pace}</span>
+                      <span className="robotDescription">{robot.description}</span>
+                      <span className="robotPromise">{robot.promise}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
 
           <div className="questionList">
             {questionnaire.map((question) => (
@@ -414,7 +456,7 @@ export default function Home() {
             <ul className="plainList">
               <li>원본 이미지는 분석 요청 생성에만 사용하고 기본적으로 저장하지 않습니다.</li>
               <li>저장 동의가 있을 때만 결과 요약과 질문 응답을 Firebase에 보관합니다.</li>
-              <li>분석 문구는 브랜딩 해석에 한정하며 성격이나 심리 상태를 얼굴에서 진단하지 않습니다.</li>
+              <li>분석 문구는 브랜딩 해석에 한정하며 얼굴로 성격이나 심리 상태를 진단하지 않습니다.</li>
             </ul>
           </article>
 
@@ -526,9 +568,10 @@ export default function Home() {
           <p className="quote">{report.recommendation.narrative}</p>
           <div className="insightGrid">
             <div>
-              <span>Enneagram</span>
+              <span>AI Robot</span>
               <strong>
-                Type {report.inner.enneagramType} / {report.inner.wing}
+                <Bot size={16} />
+                {report.robotName ?? "글 잘 쓰는"}
               </strong>
             </div>
             <div>

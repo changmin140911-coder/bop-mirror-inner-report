@@ -477,6 +477,110 @@ label {
   display: none;
 }
 
+.robotPicker {
+  border-top: 1px solid var(--line);
+  margin-top: 24px;
+  padding-top: 22px;
+}
+
+.robotHeader {
+  max-width: 640px;
+  margin-bottom: 16px;
+}
+
+.robotHeader h3 {
+  margin-bottom: 0;
+}
+
+.robotGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.robotCard {
+  min-height: 244px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 253, 249, 0.52)),
+    rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  text-align: left;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.robotCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px rgba(199, 125, 132, 0.14);
+}
+
+.robotCard.active {
+  border-color: rgba(199, 125, 132, 0.72);
+  background:
+    linear-gradient(145deg, rgba(255, 245, 248, 0.96), rgba(234, 247, 242, 0.74)),
+    var(--ivory);
+  box-shadow:
+    0 18px 42px rgba(199, 125, 132, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.72);
+}
+
+.robotIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--charcoal);
+  background: linear-gradient(135deg, var(--blush), var(--sage));
+}
+
+.robotTitle {
+  display: grid;
+  gap: 2px;
+}
+
+.robotTitle strong {
+  font-size: 1.08rem;
+}
+
+.robotTitle em {
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-style: normal;
+}
+
+.robotPace {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--rose);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.robotDescription,
+.robotPromise {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.robotPromise {
+  margin-top: auto;
+  color: var(--ink);
+  font-weight: 700;
+}
+
 .questionList {
   display: grid;
   gap: 16px;
@@ -756,6 +860,12 @@ label {
   font-size: 0.82rem;
 }
 
+.insightGrid strong {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .narrativeCopy {
   display: grid;
   gap: 8px;
@@ -810,7 +920,8 @@ label {
 
   .fieldGrid,
   .keywordRow,
-  .insightGrid {
+  .insightGrid,
+  .robotGrid {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -831,7 +942,8 @@ label {
 
   .fieldGrid,
   .keywordRow,
-  .insightGrid {
+  .insightGrid,
+  .robotGrid {
     grid-template-columns: 1fr;
   }
 

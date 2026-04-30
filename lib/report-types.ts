@@ -5,10 +5,58 @@ export type ScoreMap = {
   approachability: number;
 };
 
+export type AnalysisDepth = "detail" | "standard" | "quick";
+
+export type AnalysisRobot = {
+  id: AnalysisDepth;
+  name: string;
+  nickname: string;
+  icon: "eye" | "pen" | "zap";
+  model: string;
+  pace: string;
+  description: string;
+  promise: string;
+};
+
+export const analysisRobots: AnalysisRobot[] = [
+  {
+    id: "detail",
+    name: "눈썰미 최고",
+    nickname: "고급 모델",
+    icon: "eye",
+    model: "gpt-5.4",
+    pace: "가장 섬세함",
+    description: "시간이 조금 걸리지만 얼굴의 작은 균형과 분위기까지 자세히 읽어요.",
+    promise: "당신도 몰랐던 매력 포인트를 깊게 찾아냅니다."
+  },
+  {
+    id: "standard",
+    name: "글 잘 쓰는",
+    nickname: "일반 모델",
+    icon: "pen",
+    model: "gpt-5.2",
+    pace: "균형형",
+    description: "얼굴 특징을 잘 잡아내고 이해하기 쉬운 설명형 리포트로 정리해요.",
+    promise: "처음 보는 사람도 바로 이해할 수 있는 문장으로 풀어냅니다."
+  },
+  {
+    id: "quick",
+    name: "핵심만 콕",
+    nickname: "간단 모델",
+    icon: "zap",
+    model: "gpt-5.2-mini",
+    pace: "가장 빠름",
+    description: "바쁜 순간에도 꼭 필요한 정보만 모아 빠르게 요약해요.",
+    promise: "얼굴형, 키워드, 추천 방향을 짧고 선명하게 보여줍니다."
+  }
+];
+
 export type ReportData = {
   id?: string;
   createdAt?: string;
   source?: "demo" | "openai";
+  analysisDepth?: AnalysisDepth;
+  robotName?: string;
   profile: {
     persona: string;
     summary: string;
@@ -91,6 +139,7 @@ export type AnalysisPayload = {
   brandFocus: string;
   consentToStore: boolean;
   answers: QuestionnaireAnswer[];
+  analysisDepth: AnalysisDepth;
   imageMimeType: string;
   imageBase64: string;
 };
@@ -285,6 +334,10 @@ export const sampleHistory: HistoryItem[] = [
   }
 ];
 
+export function getRobotByDepth(depth?: AnalysisDepth) {
+  return analysisRobots.find((robot) => robot.id === depth) ?? analysisRobots[1];
+}
+
 export function buildFallbackReport(payload?: Partial<AnalysisPayload>): ReportData {
   const values = new Set(payload?.answers?.map((answer) => answer.value) ?? []);
   const presetKey = values.has("distinctive") || values.has("expression") || values.has("poetic")
@@ -293,12 +346,15 @@ export function buildFallbackReport(payload?: Partial<AnalysisPayload>): ReportD
       ? "refined"
       : "warm";
   const preset = fallbackPresets[presetKey];
+  const robot = getRobotByDepth(payload?.analysisDepth);
   const storageMode = payload?.consentToStore
     ? "동의된 리포트 데이터만 Firebase에 저장"
     : "업로드 이미지는 세션 처리 후 저장하지 않음";
 
   return {
     source: "demo",
+    analysisDepth: robot.id,
+    robotName: robot.name,
     createdAt: new Date().toISOString(),
     profile: {
       persona: preset.persona,

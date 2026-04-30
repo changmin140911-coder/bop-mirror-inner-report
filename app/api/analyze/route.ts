@@ -6,7 +6,11 @@ import {
   uploadGeneratedImage,
   isFirebaseConfigured
 } from "@/lib/firebase-admin";
-import type { AnalysisPayload, QuestionnaireAnswer } from "@/lib/report-types";
+import type {
+  AnalysisDepth,
+  AnalysisPayload,
+  QuestionnaireAnswer
+} from "@/lib/report-types";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -24,6 +28,11 @@ function parseAnswers(raw: string | null): QuestionnaireAnswer[] {
   }
 }
 
+function parseDepth(raw: FormDataEntryValue | null): AnalysisDepth {
+  const value = String(raw || "standard");
+  return value === "detail" || value === "quick" ? value : "standard";
+}
+
 export async function POST(request: Request) {
   const formData = await request.formData();
   const file = formData.get("image");
@@ -31,6 +40,7 @@ export async function POST(request: Request) {
   const brandFocus = String(formData.get("brandFocus") || "");
   const consentToStore = formData.get("consentToStore") === "true";
   const answers = parseAnswers(String(formData.get("answers") || ""));
+  const analysisDepth = parseDepth(formData.get("analysisDepth"));
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "이미지 파일이 필요합니다." }, { status: 400 });
@@ -50,6 +60,7 @@ export async function POST(request: Request) {
     brandFocus,
     consentToStore,
     answers,
+    analysisDepth,
     imageMimeType: file.type,
     imageBase64: buffer.toString("base64")
   };

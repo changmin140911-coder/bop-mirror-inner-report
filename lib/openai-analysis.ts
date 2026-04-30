@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import {
   buildFallbackReport,
+  getRobotByDepth,
   type AnalysisPayload,
   type AnalysisResponse,
   type ReportData
@@ -150,14 +151,11 @@ const reportSchema = {
 
 function getOpenAIClient() {
   const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return null;
-  }
-
-  return new OpenAI({ apiKey });
+  return apiKey ? new OpenAI({ apiKey }) : null;
 }
 
 function getAnalysisPrompt(payload: AnalysisPayload) {
+  const robot = getRobotByDepth(payload.analysisDepth);
   const questionnaireSummary = payload.answers
     .map((answer) => `${answer.prompt}: ${answer.label}`)
     .join("\n");
@@ -167,11 +165,16 @@ You are creating a premium visual branding report in Korean.
 You must not infer mental health, morality, or hidden pathology from the face.
 Use the image only for visual branding analysis such as shape, proportion, line quality, and color temperature.
 Use the questionnaire only as self-reported preference and expression data.
-Keep the tone professional, aesthetic, and insightful.
+Keep the tone professional, aesthetic, warm, and easy for women in their 20s to read.
 Return valid JSON that matches the schema exactly.
 
 Brand focus:
 ${payload.brandFocus || "없음"}
+
+Selected analysis robot:
+${robot.name} (${robot.nickname})
+${robot.description}
+${robot.promise}
 
 Questionnaire:
 ${questionnaireSummary}
@@ -181,6 +184,8 @@ Report rules:
 - proportion values should be realistic percentages that sum to about 100.
 - scores should be 0-100.
 - color.palette and color.avoid must be hex strings.
+- If the selected robot is "quick", keep sentences shorter and more summary-like.
+- If the selected robot is "detail", add more nuanced visual branding language.
 - recommendation.moodboardPrompt should describe a premium editorial moodboard, not a transformed portrait of the uploaded user.
 - security fields should explain consent-based storage and that this is branding guidance, not diagnosis.
 `.trim();
@@ -236,6 +241,7 @@ function clampScore(value: number) {
 
 export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<AnalysisResponse> {
   const client = getOpenAIClient();
+  const selectedRobot = getRobotByDepth(payload.analysisDepth);
 
   if (!client) {
     return {
@@ -248,7 +254,7 @@ export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<Analy
     };
   }
 
-  const analysisModel = process.env.OPENAI_ANALYSIS_MODEL || "gpt-5.4";
+  const analysisModel = process.env.OPENAI_ANALYSIS_MODEL || selectedRobot.model;
   const imageModel = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1.5";
 
   try {
@@ -256,7 +262,7 @@ export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<Analy
     const response = await client.responses.create({
       model: analysisModel,
       reasoning: {
-        effort: "medium"
+        effort: selectedRobot.id === "detail" ? "high" : "medium"
       },
       text: {
         format: {
@@ -277,7 +283,7 @@ export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<Analy
             {
               type: "input_image",
               image_url: dataUrl,
-              detail: "high"
+              detail: selectedRobot.id === "quick" ? "low" : "high"
             }
           ]
         }
@@ -286,13 +292,15 @@ export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<Analy
 
     const parsed = JSON.parse(response.output_text) as ReportData;
     const report = normalizeReport(parsed);
+    report.analysisDepth = selectedRobot.id;
+    report.robotName = selectedRobot.name;
 
     try {
       const imageResult = await client.images.generate({
         model: imageModel,
         prompt: report.recommendation.moodboardPrompt,
         size: "1536x1024",
-        quality: "medium"
+        quality: selectedRobot.id === "quick" ? "low" : "medium"
       });
 
       const base64Image = imageResult.data?.[0]?.b64_json;
