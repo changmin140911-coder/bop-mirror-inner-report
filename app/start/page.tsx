@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -43,7 +43,7 @@ export default function StartPage() {
   );
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("성별과 취향 질문부터 천천히 선택해 주세요.");
-  const [isPending, startTransition] = useTransition();
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const progressText = useMemo(() => {
     const answered = questionnaire.filter((question) => answers[question.id]).length;
@@ -82,38 +82,38 @@ export default function StartPage() {
 
     setErrorMessage("");
     setStatusMessage("AI가 얼굴 이미지와 마음 모양 데이터를 함께 분석하고 있습니다.");
+    setIsAnalyzing(true);
 
-    startTransition(() => {
-      void (async () => {
-        const formData = new FormData();
-        formData.set("image", selectedFile);
-        formData.set("nickname", nickname);
-        formData.set("gender", gender);
-        formData.set("brandFocus", brandFocus);
-        formData.set("consentToStore", String(consentToStore));
-        formData.set("analysisDepth", selectedRobot);
-        formData.set("answers", JSON.stringify(buildAnswers()));
+    void (async () => {
+      const formData = new FormData();
+      formData.set("image", selectedFile);
+      formData.set("nickname", nickname);
+      formData.set("gender", gender);
+      formData.set("brandFocus", brandFocus);
+      formData.set("consentToStore", String(consentToStore));
+      formData.set("analysisDepth", selectedRobot);
+      formData.set("answers", JSON.stringify(buildAnswers()));
 
-        try {
-          const response = await fetch("/api/analyze", {
-            method: "POST",
-            body: formData
-          });
-          const data = (await response.json()) as AnalysisResponse | { error: string };
+      try {
+        const response = await fetch("/api/analyze", {
+          method: "POST",
+          body: formData
+        });
+        const data = (await response.json()) as AnalysisResponse | { error: string };
 
-          if (!response.ok || "error" in data) {
-            throw new Error("error" in data ? data.error : "분석 요청에 실패했습니다.");
-          }
-
-          const reportId = data.report.id ?? `local-${Date.now()}`;
-          window.localStorage.setItem(`bop-report-${reportId}`, JSON.stringify(data.report));
-          router.push(`/report/${reportId}`);
-        } catch (error) {
-          setStatusMessage("분석을 완료하지 못했습니다.");
-          setErrorMessage(error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.");
+        if (!response.ok || "error" in data) {
+          throw new Error("error" in data ? data.error : "분석 요청에 실패했습니다.");
         }
-      })();
-    });
+
+        const reportId = data.report.id ?? `local-${Date.now()}`;
+        window.localStorage.setItem(`bop-report-${reportId}`, JSON.stringify(data.report));
+        router.push(`/report/${reportId}`);
+      } catch (error) {
+        setIsAnalyzing(false);
+        setStatusMessage("분석을 완료하지 못했습니다.");
+        setErrorMessage(error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.");
+      }
+    })();
   }
 
   return (
@@ -273,14 +273,43 @@ export default function StartPage() {
               <img className="sidePreviewImage" src={previewUrl} alt="업로드 사진 미리보기" />
             ) : null}
             {errorMessage ? <p className="errorCopy">{errorMessage}</p> : null}
-            <button className="primaryButton fullButton" onClick={submitAnalysis} disabled={isPending}>
+            <button className="primaryButton fullButton" onClick={submitAnalysis} disabled={isAnalyzing}>
               <ScanFace size={18} />
-              {isPending ? "분석 중..." : "분석 결과 보기"}
+              {isAnalyzing ? "분석 중..." : "분석 결과 보기"}
               <ArrowRight size={18} />
             </button>
           </article>
         </aside>
       </section>
+
+      {isAnalyzing ? (
+        <div className="analysisLoadingOverlay" role="status" aria-live="polite">
+          <div className="analysisLoadingCard">
+            <div className="loadingPreviewShell">
+              {previewUrl ? <img src={previewUrl} alt="분석 중인 업로드 사진" /> : null}
+              <span className="loadingScanLine" />
+              <span className="loadingFaceRing" />
+              <span className="loadingDot dotOne" />
+              <span className="loadingDot dotTwo" />
+              <span className="loadingDot dotThree" />
+            </div>
+            <div className="loadingCopy">
+              <p className="eyebrow">AI Styling Report</p>
+              <h2>당신의 톤과 분위기를 정리하고 있어요.</h2>
+              <p>
+                사진에서 보이는 빛, 대비감, 선의 느낌을 읽고 취향 답변과 맞춰
+                더 구체적인 스타일 리포트를 만드는 중입니다.
+              </p>
+              <div className="loadingSteps">
+                <span>사진 신호 읽기</span>
+                <span>어울리는 톤 정리</span>
+                <span>스타일 공식 작성</span>
+                <span>무드보드 생성</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }
