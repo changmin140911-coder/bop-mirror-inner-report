@@ -65,6 +65,13 @@ export type ReportData = {
   source?: "demo" | "openai";
   analysisDepth?: AnalysisDepth;
   robotName?: string;
+  intake?: {
+    nickname?: string;
+    gender?: string;
+    brandFocus?: string;
+    consentToStore?: boolean;
+    answers?: QuestionnaireAnswer[];
+  };
   profile: {
     persona: string;
     summary: string;

@@ -70,6 +70,13 @@ export async function POST(request: Request) {
   const analysis = await analyzeWithOpenAI(payload);
   const reportId = randomUUID();
   analysis.report.id = reportId;
+  analysis.report.intake = {
+    nickname,
+    gender,
+    brandFocus,
+    consentToStore,
+    answers
+  };
 
   let generatedImageStored = false;
   if (analysis.report.generatedImage?.dataUrl && isFirebaseConfigured()) {

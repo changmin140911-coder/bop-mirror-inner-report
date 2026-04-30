@@ -110,8 +110,27 @@ export async function getReportFromFirebase(reportId: string) {
     return null;
   }
 
-  const data = doc.data() as { report?: ReportData };
-  return data.report ?? null;
+  const data = doc.data() as {
+    nickname?: string | null;
+    gender?: string | null;
+    brandFocus?: string | null;
+    answers?: AnalysisPayload["answers"];
+    report?: ReportData;
+  };
+
+  if (!data.report) {
+    return null;
+  }
+
+  return {
+    ...data.report,
+    intake: data.report.intake ?? {
+      nickname: data.nickname ?? "",
+      gender: data.gender ?? "",
+      brandFocus: data.brandFocus ?? "",
+      answers: data.answers ?? []
+    }
+  };
 }
 
 export async function listAdminReports(limit = 25) {
