@@ -166,6 +166,7 @@ You must not infer mental health, morality, or hidden pathology from the face.
 Use the image only for visual branding analysis such as shape, proportion, line quality, and color temperature.
 Use the questionnaire only as self-reported preference and expression data.
 Keep the tone professional, aesthetic, warm, and easy for women in their 20s to read.
+Prefer natural Korean labels over English jargon. For example, do not use labels like "Structured Elegant" as the main persona name.
 Return valid JSON that matches the schema exactly.
 
 Brand focus:
@@ -187,6 +188,7 @@ Report rules:
 - If the selected robot is "quick", keep sentences shorter and more summary-like.
 - If the selected robot is "detail", add more nuanced visual branding language.
 - recommendation.moodboardPrompt should describe a premium editorial moodboard, not a transformed portrait of the uploaded user.
+- recommendation.moodboardPrompt should ask for stylish women-focused editorial references including outfit, makeup, and mood photography.
 - security fields should explain consent-based storage and that this is branding guidance, not diagnosis.
 `.trim();
 }

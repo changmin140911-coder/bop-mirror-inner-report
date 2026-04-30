@@ -7,11 +7,14 @@ import {
   Camera,
   Download,
   Eye,
+  Heart,
   ImagePlus,
   Lock,
+  Palette,
   PenLine,
   ScanFace,
   ShieldCheck,
+  Shirt,
   Sparkles,
   Zap
 } from "lucide-react";
@@ -126,6 +129,65 @@ function formatTime(iso: string) {
   });
 }
 
+function splitSentences(text: string) {
+  return text
+    .split(/[,·]|(?<=[.!?])\s+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function buildStyleGuide(report: ReportData) {
+  const silhouetteHint = report.mirror.lineTypeLabel.includes("곡선")
+    ? "부드러운 곡선이 살아나는 블라우스, 니트, 스커트 실루엣"
+    : report.mirror.lineTypeLabel.includes("직선")
+      ? "직선이 살아 있는 재킷, 셔츠, 슬랙스 실루엣"
+      : "곡선과 직선이 균형 있게 섞인 단정한 실루엣";
+
+  const moodItems = splitSentences(report.recommendation.profileMood).slice(0, 3);
+
+  return {
+    title: `${report.profile.keywords[0]}을 살려주는 스타일 공식`,
+    subtitle: "지금 바로 따라 하기 쉬운 추천만 담았습니다.",
+    colors: [
+      "얼굴빛을 맑게 살려주는 베이스 톤",
+      "사진에서 분위기를 살려주는 포인트 톤",
+      "메이크업과 옷에 함께 쓰기 좋은 연결 톤",
+      "차분하게 마무리해 주는 음영 톤"
+    ],
+    outfits: [
+      `${report.color.seasonLabel} 팔레트를 활용한 톤온톤 스타일`,
+      silhouetteHint,
+      `${report.profile.keywords[1]}이 살아나는 작고 정제된 액세서리`
+    ],
+    beauty: [
+      report.recommendation.hair,
+      report.recommendation.makeup,
+      `${report.color.undertone} 톤을 살린 립과 블러셔 조합`
+    ],
+    mood:
+      moodItems.length > 0
+        ? moodItems
+        : [
+            report.recommendation.profileMood,
+            "정돈된 배경과 부드러운 조명",
+            "과한 연출보다 자연스러운 시선 처리"
+          ]
+  };
+}
+
+function buildSecretProfile(report: ReportData) {
+  return {
+    title: `에니어그램 ${report.inner.enneagramType}번 ${report.inner.wing}`,
+    summary:
+      "처음의 마음 모양 테스트보다 한층 깊게, 당신이 무엇을 원하고 어디에서 에너지가 소모되는지 읽어보는 단계입니다.",
+    points: [
+      report.inner.expressionDesire,
+      report.inner.stressSignal,
+      report.inner.brandNeed
+    ]
+  };
+}
+
 function AnalysisOverlay({ previewUrl }: { previewUrl: string | null }) {
   return (
     <div className="previewFrame">
@@ -172,6 +234,8 @@ export default function Home() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const styleGuide = buildStyleGuide(report);
+  const secretProfile = buildSecretProfile(report);
 
   useEffect(() => {
     let active = true;
@@ -535,77 +599,154 @@ export default function Home() {
           </article>
 
           <article className="panel imagePanel">
-            <p className="eyebrow">Generated Moodboard</p>
-            <h3>Best Hair & Makeup</h3>
-            {report.generatedImage?.dataUrl ? (
-              <img
-                alt={report.generatedImage.alt}
-                className="generatedImage"
-                src={report.generatedImage.dataUrl}
-              />
-            ) : (
-              <div className="generatedFallback">
-                <Sparkles size={22} />
-                <strong>무드 이미지가 준비되면 이 영역에 표시됩니다.</strong>
-                <span>{report.recommendation.profileMood}</span>
+            <p className="eyebrow">Step 04. Style Formula</p>
+            <h3>당신을 위한 스타일 추천</h3>
+            <p className="styleLead">{styleGuide.title}</p>
+            <div className="styleVisual">
+              {report.generatedImage?.dataUrl ? (
+                <img
+                  alt={report.generatedImage.alt}
+                  className="generatedImage"
+                  src={report.generatedImage.dataUrl}
+                />
+              ) : (
+                <div className="generatedFallback">
+                  <Sparkles size={22} />
+                  <strong>여성 모델 중심 무드보드는 AI 이미지 연결 후 자동으로 채워집니다.</strong>
+                  <span>{styleGuide.subtitle}</span>
+                </div>
+              )}
+            </div>
+            <div className="styleInfoGrid">
+              <div className="miniInfoCard">
+                <div className="miniInfoHeader">
+                  <Palette size={16} />
+                  <strong>찰떡 컬러</strong>
+                </div>
+                <div className="paletteStoryGrid">
+                  {report.color.palette.map((color, index) => (
+                    <div className="paletteStoryItem" key={`${color}-${index}`}>
+                      <span className="paletteStorySwatch" style={{ background: color }} />
+                      <p>{styleGuide.colors[index]}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-            )}
-            <ul className="plainList compact">
-              <li>{report.recommendation.hair}</li>
-              <li>{report.recommendation.makeup}</li>
-              <li>{report.recommendation.profileMood}</li>
-            </ul>
+
+              <div className="miniInfoCard">
+                <div className="miniInfoHeader">
+                  <Shirt size={16} />
+                  <strong>의상 추천</strong>
+                </div>
+                <ul className="plainList compact">
+                  {styleGuide.outfits.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="miniInfoCard">
+                <div className="miniInfoHeader">
+                  <Sparkles size={16} />
+                  <strong>뷰티 추천</strong>
+                </div>
+                <ul className="plainList compact">
+                  {styleGuide.beauty.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="miniInfoCard">
+                <div className="miniInfoHeader">
+                  <Heart size={16} />
+                  <strong>당신의 무드</strong>
+                </div>
+                <ul className="plainList compact">
+                  {styleGuide.mood.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </article>
+        </div>
+
+        <div className="deepLinkRow">
+          <a className="primaryButton pulseButton" href="#deep-profile">
+            <Sparkles size={18} />
+            내 얼굴에 숨겨진 '비밀 성격'(에니어그램 심화 유형) 확인하기
+          </a>
         </div>
       </section>
 
-      <section className="section insightSection">
+      <section className="section insightSection" id="deep-profile">
         <article className="panel narrativePanel">
           <div className="panelHeader">
-            <p className="eyebrow">Inner Connection</p>
-            <h2>{report.dissonance.tensionLabel}</h2>
+            <p className="eyebrow">Step 03. Deeper Insight</p>
+            <h2>얼굴 분석 결과에 숨겨진 또 다른 당신을 만나보세요.</h2>
+            <p>
+              얼굴 분석으로 보이는 인상과 마음 모양 테스트로 읽힌 흐름을 합치면,
+              처음보다 훨씬 더 깊은 당신의 방향이 보이기 시작합니다.
+            </p>
           </div>
           <p className="quote">{report.recommendation.narrative}</p>
           <div className="insightGrid">
             <div>
-              <span>AI Robot</span>
+              <span>마음 모양 연결</span>
               <strong>
                 <Bot size={16} />
                 {report.robotName ?? "글 잘 쓰는"}
               </strong>
             </div>
             <div>
-              <span>Expression Need</span>
-              <strong>{report.inner.expressionDesire}</strong>
+              <span>비밀 성격 프리뷰</span>
+              <strong>{secretProfile.title}</strong>
             </div>
             <div>
-              <span>Potential Gap</span>
+              <span>잠재력 간극</span>
               <strong>{report.dissonance.gapScore}</strong>
             </div>
+          </div>
+          <div className="secretPanel">
+            <strong>{secretProfile.summary}</strong>
+            <ul className="plainList compact">
+              {secretProfile.points.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
           </div>
           <div className="narrativeCopy">
             <p>{report.dissonance.insight}</p>
             <p>{report.dissonance.recommendation}</p>
-            <p>{report.inner.brandNeed}</p>
           </div>
         </article>
 
         <div className="ctaStack">
           <ResultSnapshot report={report} />
           <article className="panel actionPanel">
-            <p className="eyebrow">Export & Follow-up</p>
-            <h3>결과 저장과 다음 단계</h3>
-            <p>{report.security.storageMode}</p>
-            <p>{report.security.retention}</p>
+            <p className="eyebrow">Deep Dive</p>
+            <h3>심화 분석으로 더 또렷하게</h3>
+            <p>
+              지금 결과는 시작점입니다. 비밀 성격까지 함께 읽으면 나에게 맞는 스타일과
+              브랜딩 문장이 훨씬 더 선명해집니다.
+            </p>
             <div className="heroActions">
               <button className="primaryButton" onClick={captureSnapshot} type="button">
                 <Download size={18} />
                 결과 이미지 저장
               </button>
-              <a className="secondaryButton" href="mailto:changmin140911@gmail.com">
+              <a
+                className="secondaryButton"
+                href="mailto:changmin140911@gmail.com?subject=BOP%20심화%20분석%20문의"
+              >
                 <ArrowRight size={18} />
-                1:1 해석 연결
+                심화 분석 신청하기
               </a>
+            </div>
+            <div className="securityNote">
+              <p>{report.security.storageMode}</p>
+              <p>{report.security.retention}</p>
             </div>
             <div className="privacyPill">
               <Lock size={14} />

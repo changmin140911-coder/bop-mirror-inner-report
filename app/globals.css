@@ -198,6 +198,12 @@ label {
   font-size: 0.96rem;
 }
 
+.styleLead {
+  margin-bottom: 18px;
+  color: var(--muted);
+  font-size: 0.98rem;
+}
+
 .statusCard,
 .panel,
 .previewFrame,
@@ -806,6 +812,11 @@ label {
   border: 1px solid rgba(25, 23, 21, 0.08);
 }
 
+.styleVisual {
+  overflow: hidden;
+  border-radius: 8px;
+}
+
 .generatedFallback {
   min-height: 290px;
   border: 1px dashed var(--line-strong);
@@ -820,6 +831,67 @@ label {
 
 .generatedFallback span {
   color: var(--muted);
+}
+
+.styleInfoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.miniInfoCard,
+.secretPanel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.miniInfoHeader {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.miniInfoHeader strong {
+  font-size: 0.96rem;
+}
+
+.paletteStoryGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.paletteStoryItem {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.paletteStoryItem p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.paletteStorySwatch {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(25, 23, 21, 0.12);
+  border-radius: 50%;
+}
+
+.deepLinkRow {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pulseButton {
+  animation: pulse 2.8s ease-in-out infinite;
 }
 
 .insightSection {
@@ -872,6 +944,12 @@ label {
   margin-top: 22px;
 }
 
+.secretPanel {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
 .ctaStack {
   display: grid;
   gap: 18px;
@@ -896,6 +974,18 @@ label {
   font-size: 0.9rem;
 }
 
+.securityNote {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.securityNote p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
 @keyframes scan {
   0%,
   100% {
@@ -903,6 +993,18 @@ label {
   }
   50% {
     transform: translateY(500px);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    transform: translateY(0);
+    box-shadow: 0 18px 30px rgba(199, 125, 132, 0.22);
+  }
+  50% {
+    transform: translateY(-1px);
+    box-shadow: 0 0 0 10px rgba(199, 125, 132, 0), 0 22px 34px rgba(199, 125, 132, 0.24);
   }
 }
 
@@ -921,7 +1023,8 @@ label {
   .fieldGrid,
   .keywordRow,
   .insightGrid,
-  .robotGrid {
+  .robotGrid,
+  .styleInfoGrid {
     grid-template-columns: 1fr 1fr;
   }
 }
@@ -943,7 +1046,8 @@ label {
   .fieldGrid,
   .keywordRow,
   .insightGrid,
-  .robotGrid {
+  .robotGrid,
+  .styleInfoGrid {
     grid-template-columns: 1fr;
   }
 

@@ -235,8 +235,8 @@ type FallbackPreset = {
 
 const fallbackPresets: Record<string, FallbackPreset> = {
   distinctive: {
-    persona: "Modern Muse",
-    summary: "선명한 개성과 정제된 세련미가 함께 읽히는 타입",
+    persona: "맑고 세련된 뮤즈",
+    summary: "선명한 개성과 맑은 세련미가 함께 읽히는 타입",
     keywords: ["세련미", "고유함", "깊이감", "기억되는 무드"],
     archetypeLine: "시선을 끌되 과장 없이 오래 남는 인상",
     enneagramType: 4,
@@ -264,8 +264,8 @@ const fallbackPresets: Record<string, FallbackPreset> = {
     avoid: ["#bb6725", "#80501c"]
   },
   refined: {
-    persona: "Structured Elegant",
-    summary: "전문성과 우아함이 동시에 읽히는 고밀도 이미지",
+    persona: "우아하고 세련된 무드",
+    summary: "전문성과 우아함이 동시에 느껴지는 고밀도 이미지",
     keywords: ["정제된 신뢰감", "세련미", "완성도", "도시적 균형"],
     archetypeLine: "차분하지만 기준이 느껴지는 프로페셔널 무드",
     enneagramType: 3,
@@ -293,7 +293,7 @@ const fallbackPresets: Record<string, FallbackPreset> = {
     avoid: ["#d18d28", "#915126"]
   },
   warm: {
-    persona: "Soft Signature",
+    persona: "부드럽고 사랑스러운 시그니처",
     summary: "편안한 접근성과 신뢰가 부드럽게 이어지는 이미지",
     keywords: ["친밀감", "맑은 신뢰감", "유연함", "부드러운 존재감"],
     archetypeLine: "가까이 가고 싶은 인상 안에 기준이 있는 타입",
@@ -327,7 +327,7 @@ export const sampleHistory: HistoryItem[] = [
   {
     id: "sample-1",
     createdAt: new Date().toISOString(),
-    persona: "Modern Muse",
+    persona: "맑고 세련된 뮤즈",
     summary: "시선을 끌되 과장 없이 오래 남는 인상",
     keywords: ["세련미", "고유함", "깊이감", "기억되는 무드"],
     source: "demo"
