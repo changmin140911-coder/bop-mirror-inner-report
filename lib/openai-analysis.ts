@@ -39,7 +39,15 @@ const reportSchema = {
     mirror: {
       type: "object",
       additionalProperties: false,
-      required: ["faceShapeLabel", "proportion", "lineTypeLabel", "scores", "moodDescriptors"],
+      required: [
+        "faceShapeLabel",
+        "proportion",
+        "lineTypeLabel",
+        "scores",
+        "moodDescriptors",
+        "photoClues",
+        "balanceComment"
+      ],
       properties: {
         faceShapeLabel: { type: "string" },
         proportion: {
@@ -70,13 +78,20 @@ const reportSchema = {
           items: { type: "string" },
           minItems: 3,
           maxItems: 3
-        }
+        },
+        photoClues: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 4,
+          maxItems: 4
+        },
+        balanceComment: { type: "string" }
       }
     },
     color: {
       type: "object",
       additionalProperties: false,
-      required: ["seasonLabel", "undertone", "palette", "avoid", "note"],
+      required: ["seasonLabel", "undertone", "palette", "avoid", "note", "bestUse", "textureWords"],
       properties: {
         seasonLabel: { type: "string" },
         undertone: { type: "string" },
@@ -92,7 +107,19 @@ const reportSchema = {
           minItems: 2,
           maxItems: 2
         },
-        note: { type: "string" }
+        note: { type: "string" },
+        bestUse: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 3,
+          maxItems: 3
+        },
+        textureWords: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 3,
+          maxItems: 3
+        }
       }
     },
     inner: {
@@ -137,7 +164,10 @@ const reportSchema = {
         "outfitDetails",
         "beautyDetails",
         "moodDetails",
-        "photoDirection"
+        "photoDirection",
+        "avoidDetails",
+        "shoppingKeywords",
+        "sessionHook"
       ],
       properties: {
         hair: { type: "string" },
@@ -169,7 +199,20 @@ const reportSchema = {
           items: { type: "string" },
           minItems: 3,
           maxItems: 3
-        }
+        },
+        avoidDetails: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 3,
+          maxItems: 3
+        },
+        shoppingKeywords: {
+          type: "array",
+          items: { type: "string" },
+          minItems: 5,
+          maxItems: 5
+        },
+        sessionHook: { type: "string" }
       }
     },
     security: {
@@ -203,6 +246,8 @@ Detail mode quality rules:
 - Write like a paid premium consulting report.
 - Mention concrete visible photo clues: contrast, lightness, facial line balance, feature focus, and tone harmony.
 - Give richer, more specific styling directions that feel personally selected.
+- Do not stop at labels. Explain "why this works" and "how to apply it tomorrow".
+- Build a high-end report that feels close to a 20-30 page expert PDF compressed into web sections.
 - Make the user feel "I want to book this" without using fear or heavy diagnostic wording.`
       : robot.id === "standard"
         ? `
@@ -256,6 +301,13 @@ Report rules:
 - recommendation.hair, recommendation.makeup, and recommendation.profileMood must be concrete and practical.
 - recommendation.toneReason should explain why the selected palette suits the visible photo.
 - recommendation.outfitDetails, beautyDetails, moodDetails, and photoDirection must each contain exactly 3 concrete Korean recommendations.
+- mirror.photoClues must contain exactly 4 concrete visual clues from the uploaded photo.
+- mirror.balanceComment must be a warm but specific paragraph about the user's visible image balance.
+- color.bestUse must tell exactly 3 practical uses for the palette.
+- color.textureWords must contain exactly 3 fabric or makeup texture words.
+- recommendation.avoidDetails must contain exactly 3 styling choices to reduce.
+- recommendation.shoppingKeywords must contain exactly 5 useful Korean shopping/search keywords.
+- recommendation.sessionHook must be one persuasive sentence that naturally makes the user want a deeper 1:1 styling session.
 - If the selected robot is "quick", keep sentences shorter and more summary-like.
 - If the selected robot is "detail", add more nuanced visual branding language.
 - recommendation.moodboardPrompt should describe a premium editorial moodboard, not a transformed portrait of the uploaded user.
@@ -285,6 +337,8 @@ function normalizeReport(raw: ReportData): ReportData {
     },
     mirror: {
       ...raw.mirror,
+      photoClues: (raw.mirror.photoClues ?? []).slice(0, 4),
+      balanceComment: raw.mirror.balanceComment ?? "",
       scores: {
         softness: clampScore(raw.mirror.scores.softness),
         clarity: clampScore(raw.mirror.scores.clarity),
@@ -295,7 +349,18 @@ function normalizeReport(raw: ReportData): ReportData {
     color: {
       ...raw.color,
       palette: safePalette,
-      avoid: safeAvoid
+      avoid: safeAvoid,
+      bestUse: (raw.color.bestUse ?? []).slice(0, 3),
+      textureWords: (raw.color.textureWords ?? []).slice(0, 3)
+    },
+    recommendation: {
+      ...raw.recommendation,
+      outfitDetails: (raw.recommendation.outfitDetails ?? []).slice(0, 3),
+      beautyDetails: (raw.recommendation.beautyDetails ?? []).slice(0, 3),
+      moodDetails: (raw.recommendation.moodDetails ?? []).slice(0, 3),
+      photoDirection: (raw.recommendation.photoDirection ?? []).slice(0, 3),
+      avoidDetails: (raw.recommendation.avoidDetails ?? []).slice(0, 3),
+      shoppingKeywords: (raw.recommendation.shoppingKeywords ?? []).slice(0, 5)
     },
     dissonance: {
       ...raw.dissonance,

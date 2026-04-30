@@ -70,6 +70,18 @@ function buildStyleGuide(report: ReportData) {
       "얼굴은 살짝 사선으로 두어 윤곽을 부드럽게 정리",
       "상체와 어깨선은 힘을 빼고 자연스럽게",
       "옷과 배경의 톤 차이를 한 단계만 주기"
+    ],
+    avoid: report.recommendation.avoidDetails ?? [
+      "얼굴 가까이에 너무 탁한 색을 넓게 쓰는 것",
+      "헤어와 배경, 의상이 모두 강해지는 구성",
+      "피부 결을 과하게 덮는 베이스 표현"
+    ],
+    shopping: report.recommendation.shoppingKeywords ?? [
+      `${report.color.seasonLabel} 블라우스`,
+      "새틴 셔츠",
+      "미니멀 재킷",
+      "로즈 립",
+      "프로필 촬영 무드"
     ]
   };
 }
@@ -167,6 +179,9 @@ export function ReportView({ report }: { report: ReportData }) {
             <p className="eyebrow">Image Balance</p>
             <h3>인상 밸런스</h3>
             <p>{report.mirror.proportion.label}</p>
+            {report.mirror.balanceComment ? (
+              <p className="toneReason">{report.mirror.balanceComment}</p>
+            ) : null}
             <div className="ratioBars">
               <span style={{ height: `${report.mirror.proportion.upper * 1.45}px` }}>상안부</span>
               <span style={{ height: `${report.mirror.proportion.middle * 1.45}px` }}>중안부</span>
@@ -177,6 +192,13 @@ export function ReportView({ report }: { report: ReportData }) {
                 <span key={item}>{item}</span>
               ))}
             </div>
+            {report.mirror.photoClues?.length ? (
+              <ul className="clueList">
+                {report.mirror.photoClues.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ) : null}
           </article>
 
           <article className="panel featurePanel">
@@ -205,6 +227,20 @@ export function ReportView({ report }: { report: ReportData }) {
             <p className="subtleCopy">{report.color.note}</p>
             {report.recommendation.toneReason ? (
               <p className="toneReason">{report.recommendation.toneReason}</p>
+            ) : null}
+            {report.color.bestUse?.length ? (
+              <ul className="clueList compactClues">
+                {report.color.bestUse.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            ) : null}
+            {report.color.textureWords?.length ? (
+              <div className="descriptorRow">
+                {report.color.textureWords.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
             ) : null}
           </article>
 
@@ -286,6 +322,28 @@ export function ReportView({ report }: { report: ReportData }) {
                   ))}
                 </ul>
               </div>
+              <div className="miniInfoCard">
+                <div className="miniInfoHeader">
+                  <Palette size={16} />
+                  <strong>줄이면 좋은 것</strong>
+                </div>
+                <ul className="plainList compact">
+                  {styleGuide.avoid.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="miniInfoCard">
+                <div className="miniInfoHeader">
+                  <Sparkles size={16} />
+                  <strong>검색 키워드</strong>
+                </div>
+                <div className="keywordMiniRow">
+                  {styleGuide.shopping.map((item) => (
+                    <span key={item}>{item}</span>
+                  ))}
+                </div>
+              </div>
             </div>
           </article>
         </div>
@@ -327,6 +385,7 @@ export function ReportView({ report }: { report: ReportData }) {
           <div className="narrativeCopy">
             <p>{report.dissonance.insight}</p>
             <p>{report.dissonance.recommendation}</p>
+            {report.recommendation.sessionHook ? <p>{report.recommendation.sessionHook}</p> : null}
           </div>
         </article>
 

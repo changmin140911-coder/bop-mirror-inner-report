@@ -831,6 +831,23 @@ label {
   margin-top: 20px;
 }
 
+.clueList {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  margin: 18px 0 0;
+  padding: 16px 0 0 18px;
+}
+
+.clueList li {
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.compactClues {
+  margin-top: 14px;
+}
+
 .scoreStack {
   display: grid;
   gap: 18px;
@@ -970,6 +987,21 @@ label {
   height: 34px;
   border: 1px solid rgba(25, 23, 21, 0.12);
   border-radius: 50%;
+}
+
+.keywordMiniRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.keywordMiniRow span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: rgba(255, 255, 255, 0.58);
+  color: var(--ink);
+  font-size: 0.84rem;
 }
 
 .deepLinkRow {

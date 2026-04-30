@@ -26,7 +26,7 @@ export const analysisRobots: AnalysisRobot[] = [
     name: "눈썰미 최고",
     nickname: "고급 모델",
     icon: "eye",
-    model: "gpt-5.5-pro",
+    model: "gpt-5.5",
     imageModel: "gpt-image-2",
     imageQuality: "high",
     pace: "가장 섬세함",
@@ -38,7 +38,7 @@ export const analysisRobots: AnalysisRobot[] = [
     name: "글 잘 쓰는",
     nickname: "일반 모델",
     icon: "pen",
-    model: "gpt-5.4",
+    model: "gpt-5.4-mini",
     imageModel: "gpt-image-1.5",
     imageQuality: "medium",
     pace: "균형형",
@@ -82,6 +82,8 @@ export type ReportData = {
     lineTypeLabel: string;
     scores: ScoreMap;
     moodDescriptors: string[];
+    photoClues?: string[];
+    balanceComment?: string;
   };
   color: {
     seasonLabel: string;
@@ -89,6 +91,8 @@ export type ReportData = {
     palette: string[];
     avoid: string[];
     note: string;
+    bestUse?: string[];
+    textureWords?: string[];
   };
   inner: {
     enneagramType: number;
@@ -114,6 +118,9 @@ export type ReportData = {
     beautyDetails?: string[];
     moodDetails?: string[];
     photoDirection?: string[];
+    avoidDetails?: string[];
+    shoppingKeywords?: string[];
+    sessionHook?: string;
   };
   security: {
     storageMode: string;
@@ -525,14 +532,28 @@ export function buildFallbackReport(payload?: Partial<AnalysisPayload>): ReportD
       },
       lineTypeLabel: preset.lineTypeLabel,
       scores: preset.scores,
-      moodDescriptors: preset.moodDescriptors
+      moodDescriptors: preset.moodDescriptors,
+      photoClues: [
+        "전체 인상에서 정돈된 균형감이 먼저 읽힙니다.",
+        "이목구비의 중심감이 과하지 않아 스타일 변화 폭이 넓습니다.",
+        "부드러운 선감과 선명한 포인트가 함께 보여 단조롭지 않습니다.",
+        "명도 대비를 조금만 조정해도 얼굴빛의 맑음이 살아나는 타입입니다."
+      ],
+      balanceComment:
+        "현재 사진 기준으로는 강한 변신보다 이미 가진 분위기를 더 맑고 또렷하게 정리하는 방향이 잘 맞습니다. 컬러, 헤어 결, 배경 톤을 같은 무드 안에서 맞추면 전체 인상이 훨씬 고급스럽게 보입니다."
     },
     color: {
       seasonLabel: preset.seasonLabel,
       undertone: preset.undertone,
       palette: preset.palette,
       avoid: preset.avoid,
-      note: "사진 조명 변수가 있어 퍼스널 컬러는 1차 추정치로 제공됩니다."
+      note: "사진 조명 변수가 있어 퍼스널 컬러는 1차 추정치로 제공됩니다.",
+      bestUse: [
+        "상의나 얼굴 가까운 액세서리에 먼저 적용",
+        "립·블러셔·아이섀도 색감을 같은 온도로 연결",
+        "프로필 사진 배경색을 팔레트보다 한 단계 낮게 선택"
+      ],
+      textureWords: ["맑은 윤광", "부드러운 새틴", "정돈된 매트"]
     },
     inner: {
       enneagramType: preset.enneagramType,
@@ -575,7 +596,21 @@ export function buildFallbackReport(payload?: Partial<AnalysisPayload>): ReportD
         "정면보다 살짝 사선의 얼굴 각도",
         "턱선과 어깨선이 자연스럽게 이어지는 포즈",
         "옷과 배경의 톤을 한 단계만 차이 나게 구성"
-      ]
+      ],
+      avoidDetails: [
+        "얼굴 가까이에 너무 탁하거나 무거운 색을 넓게 쓰는 것",
+        "헤어와 옷, 배경이 모두 강해서 시선이 분산되는 구성",
+        "피부 결을 과하게 덮어 본래의 맑은 인상을 잃는 표현"
+      ],
+      shoppingKeywords: [
+        `${preset.seasonLabel} 블라우스`,
+        "새틴 셔츠",
+        "미니멀 재킷",
+        "로즈 립",
+        "프로필 촬영 무드"
+      ],
+      sessionHook:
+        "이 리포트의 방향을 실제 옷, 메이크업, 촬영 무드까지 맞추면 훨씬 빠르게 나만의 스타일 공식이 만들어집니다."
     },
     security: {
       storageMode,
