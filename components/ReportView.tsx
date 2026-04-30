@@ -105,11 +105,11 @@ function ResultSnapshot({ report }: { report: ReportData }) {
       </div>
       <div className="snapshotMeta">
         <div>
-          <span>AI Robot</span>
+          <span>분석 깊이</span>
           <strong>{report.robotName ?? "글 잘 쓰는"}</strong>
         </div>
         <div>
-          <span>Potential Gap</span>
+          <span>취향 선명도</span>
           <strong>{report.dissonance.gapScore}</strong>
         </div>
       </div>
@@ -120,7 +120,7 @@ function ResultSnapshot({ report }: { report: ReportData }) {
 export function ReportView({ report }: { report: ReportData }) {
   const styleGuide = buildStyleGuide(report);
   const secretProfile = {
-    title: `에니어그램 ${report.inner.enneagramType}번 ${report.inner.wing}`,
+    title: `숨은 취향 코드 ${report.inner.enneagramType}-${report.inner.wing.replace(/\D/g, "")}`,
     summary:
       "마음 모양 테스트보다 한층 깊게, 당신이 무엇을 원하고 어디에서 에너지가 소모되는지 읽어보는 단계입니다.",
     points: [
@@ -147,8 +147,8 @@ export function ReportView({ report }: { report: ReportData }) {
       <section className="section reportSection">
         <div className="reportGrid">
           <article className="panel featurePanel">
-            <p className="eyebrow">Mirror Analysis</p>
-            <h3>{report.mirror.faceShapeLabel}</h3>
+            <p className="eyebrow">Image Balance</p>
+            <h3>인상 밸런스</h3>
             <p>{report.mirror.proportion.label}</p>
             <div className="ratioBars">
               <span style={{ height: `${report.mirror.proportion.upper * 1.45}px` }}>상안부</span>
@@ -163,8 +163,8 @@ export function ReportView({ report }: { report: ReportData }) {
           </article>
 
           <article className="panel featurePanel">
-            <p className="eyebrow">Feature Scores</p>
-            <h3>{report.mirror.lineTypeLabel}</h3>
+            <p className="eyebrow">Mood Points</p>
+            <h3>분위기를 만드는 포인트</h3>
             <div className="scoreStack">
               {Object.entries(report.mirror.scores).map(([key, value]) => (
                 <GaugeBar
@@ -177,7 +177,7 @@ export function ReportView({ report }: { report: ReportData }) {
           </article>
 
           <article className="panel featurePanel">
-            <p className="eyebrow">Personal Color</p>
+            <p className="eyebrow">Best Tone</p>
             <h3>{report.color.seasonLabel}</h3>
             <p>{report.color.undertone}</p>
             <div className="paletteRow large">
@@ -202,7 +202,7 @@ export function ReportView({ report }: { report: ReportData }) {
               ) : (
                 <div className="generatedFallback">
                   <Sparkles size={22} />
-                  <strong>AI 무드보드가 준비되면 이 영역에 표시됩니다.</strong>
+                  <strong>AI 스타일 무드보드가 준비되면 이 영역에 표시됩니다.</strong>
                   <span>{styleGuide.subtitle}</span>
                 </div>
               )}
@@ -263,25 +263,25 @@ export function ReportView({ report }: { report: ReportData }) {
       <section className="section insightSection">
         <article className="panel narrativePanel">
           <div className="panelHeader">
-            <p className="eyebrow">Deep Insight</p>
-            <h2>얼굴 분석 결과에 숨겨진 또 다른 당신</h2>
-            <p>보이는 인상과 마음 모양을 함께 읽으면, 스타일의 방향이 훨씬 선명해집니다.</p>
+            <p className="eyebrow">Hidden Taste</p>
+            <h2>보이는 분위기 너머의 숨은 취향</h2>
+            <p>사진에서 보이는 인상과 선택한 답변을 함께 읽으면, 스타일의 방향이 훨씬 선명해집니다.</p>
           </div>
           <p className="quote">{report.recommendation.narrative}</p>
           <div className="insightGrid">
             <div>
-              <span>AI 분석 단계</span>
+              <span>분석 깊이</span>
               <strong>
                 <Bot size={16} />
                 {report.robotName ?? "글 잘 쓰는"}
               </strong>
             </div>
             <div>
-              <span>비밀 성격 프리뷰</span>
+              <span>숨은 취향 프리뷰</span>
               <strong>{secretProfile.title}</strong>
             </div>
             <div>
-              <span>잠재력 간극</span>
+              <span>취향 선명도</span>
               <strong>{report.dissonance.gapScore}</strong>
             </div>
           </div>
@@ -304,7 +304,7 @@ export function ReportView({ report }: { report: ReportData }) {
           <article className="panel actionPanel">
             <p className="eyebrow">Export & Next</p>
             <h3>결과 저장과 심화 분석</h3>
-            <p>결과 이미지를 저장하고, 필요하면 에니어그램 심화 유형까지 이어서 확인할 수 있어요.</p>
+              <p>결과 이미지를 저장하고, 필요하면 더 구체적인 스타일 코칭으로 이어갈 수 있어요.</p>
             <div className="heroActions">
               <button className="primaryButton" onClick={captureSnapshot} type="button">
                 <Download size={18} />
@@ -312,10 +312,10 @@ export function ReportView({ report }: { report: ReportData }) {
               </button>
               <a
                 className="secondaryButton"
-                href="mailto:changmin140911@gmail.com?subject=BOP%20심화%20분석%20문의"
+                href="/apply"
               >
                 <ArrowRight size={18} />
-                심화 분석 신청하기
+                스타일 코칭 신청하기
               </a>
             </div>
             <div className="securityNote">

@@ -8,9 +8,9 @@ export default function Home() {
       <section className="hero section landingHero">
         <div className="heroCopy">
           <p className="eyebrow">BOP Mirror x Inner</p>
-          <h1>당신의 얼굴과 마음 모양을 함께 읽는 AI 스타일 리포트</h1>
+          <h1>나에게 어울리는 톤과 분위기를 찾는 AI 스타일 리포트</h1>
           <p className="lead">
-            성별과 에니어그램 기반 질문, 얼굴 사진, 분석 단계 선택을 거쳐
+            간단한 취향 질문과 얼굴 사진을 바탕으로
             나에게 맞는 컬러·의상·뷰티 무드까지 한 번에 정리합니다.
           </p>
           <div className="heroActions">
@@ -37,12 +37,12 @@ export default function Home() {
             </div>
             <div>
               <ShieldCheck size={18} />
-              <strong>2. 마음 모양</strong>
-              <span>약 20개 문항으로 성향 정리</span>
+              <strong>2. 취향 질문</strong>
+              <span>약 20개 문항으로 스타일 방향 정리</span>
             </div>
             <div>
               <ScanFace size={18} />
-              <strong>3. 얼굴 분석</strong>
+              <strong>3. 이미지 분석</strong>
               <span>사진 등록 후 분석 깊이 선택</span>
             </div>
             <div>

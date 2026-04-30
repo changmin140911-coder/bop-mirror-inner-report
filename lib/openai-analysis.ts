@@ -161,12 +161,20 @@ function getAnalysisPrompt(payload: AnalysisPayload) {
     .join("\n");
 
   return `
-You are creating a premium visual branding report in Korean.
+You are creating a premium AI style and image report in Korean from the user's uploaded photo.
 You must not infer mental health, morality, or hidden pathology from the face.
-Use the image only for visual branding analysis such as shape, proportion, line quality, and color temperature.
+Use the image itself carefully and specifically. Analyze visible visual signals such as:
+- overall face silhouette and balance
+- upper, middle, and lower face proportions
+- line quality around brows, eyes, nose, lips, cheekbones, and jawline
+- contrast level between hair, skin, and facial features
+- visible skin undertone clues while clearly accounting for lighting uncertainty
+- styling mood that would harmonize with the user's actual photo
 Use the questionnaire only as self-reported preference and expression data.
-Keep the tone professional, aesthetic, warm, and easy for women in their 20s to read.
+Keep the tone professional, aesthetic, warm, specific, and easy for women in their 20s to read.
 Prefer natural Korean labels over English jargon. For example, do not use labels like "Structured Elegant" as the main persona name.
+Do not show heavy tool names to the user. Avoid visible words such as "에니어그램", "얼굴형", "심리", "진단", "문제", "결핍", "치료", "검사".
+Use softer user-facing words such as "마음 취향", "인상 밸런스", "분위기", "스타일 방향", "숨은 매력", "톤".
 Return valid JSON that matches the schema exactly.
 
 Brand focus:
@@ -188,6 +196,9 @@ Report rules:
 - proportion values should be realistic percentages that sum to about 100.
 - scores should be 0-100.
 - color.palette and color.avoid must be hex strings.
+- Every report sentence must feel like it came from the uploaded photo, not a generic horoscope.
+- color.note must explain that the palette is based on visible photo signals and lighting may affect precision.
+- recommendation.hair, recommendation.makeup, and recommendation.profileMood must be concrete and practical.
 - If the selected robot is "quick", keep sentences shorter and more summary-like.
 - If the selected robot is "detail", add more nuanced visual branding language.
 - recommendation.moodboardPrompt should describe a premium editorial moodboard, not a transformed portrait of the uploaded user.
@@ -260,7 +271,7 @@ export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<Analy
   }
 
   const analysisModel = process.env.OPENAI_ANALYSIS_MODEL_OVERRIDE || selectedRobot.model;
-  const imageModel = process.env.OPENAI_IMAGE_MODEL_OVERRIDE || "gpt-image-2";
+  const imageModel = process.env.OPENAI_IMAGE_MODEL_OVERRIDE || "gpt-image-1.5";
 
   try {
     const dataUrl = `data:${payload.imageMimeType};base64,${payload.imageBase64}`;
@@ -303,9 +314,15 @@ export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<Analy
     try {
       const imageResult = await client.images.generate({
         model: imageModel,
-        prompt: report.recommendation.moodboardPrompt,
+        prompt: `${report.recommendation.moodboardPrompt}
+Create a refined women's styling moodboard with realistic editorial references:
+1. outfit texture and silhouette
+2. makeup color story
+3. hairstyle mood
+4. atmosphere and location inspiration
+Do not recreate or identify the uploaded person. Do not imply medical or psychological diagnosis.`,
         size: "1536x1024",
-        quality: selectedRobot.id === "quick" ? "low" : "medium"
+        quality: selectedRobot.id === "detail" ? "high" : selectedRobot.id === "quick" ? "low" : "medium"
       });
 
       const base64Image = imageResult.data?.[0]?.b64_json;

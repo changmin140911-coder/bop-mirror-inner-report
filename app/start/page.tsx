@@ -42,7 +42,7 @@ export default function StartPage() {
     Object.fromEntries(questionnaire.map((question) => [question.id, question.options[0].value]))
   );
   const [errorMessage, setErrorMessage] = useState("");
-  const [statusMessage, setStatusMessage] = useState("성별과 마음 모양 질문부터 천천히 선택해 주세요.");
+  const [statusMessage, setStatusMessage] = useState("성별과 취향 질문부터 천천히 선택해 주세요.");
   const [isPending, startTransition] = useTransition();
 
   const progressText = useMemo(() => {
@@ -123,7 +123,7 @@ export default function StartPage() {
         <p className="eyebrow">Start Analysis</p>
         <h1>얼굴 분석을 시작해볼게요.</h1>
         <p className="lead">
-          성별, 마음 모양 질문, 사진 등록, 분석 단계 선택 순서로 진행됩니다.
+          성별, 취향 질문, 사진 등록, 분석 단계 선택 순서로 진행됩니다.
           결과는 전용 리포트 페이지에서 확인할 수 있어요.
         </p>
       </section>
@@ -163,7 +163,7 @@ export default function StartPage() {
 
           <div className="panelHeader spacedHeader">
             <p className="eyebrow">Step 02</p>
-            <h2>마음 모양 질문</h2>
+            <h2>취향 질문</h2>
             <p>{progressText}</p>
           </div>
           <div className="questionList longQuestionList">

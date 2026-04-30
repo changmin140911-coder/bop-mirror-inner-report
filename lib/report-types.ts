@@ -24,7 +24,7 @@ export const analysisRobots: AnalysisRobot[] = [
     name: "눈썰미 최고",
     nickname: "고급 모델",
     icon: "eye",
-    model: "gpt-5.4",
+    model: "gpt-5.2",
     pace: "가장 섬세함",
     description: "시간이 조금 걸리지만 얼굴의 작은 균형과 분위기까지 자세히 읽어요.",
     promise: "당신도 몰랐던 매력 포인트를 깊게 찾아냅니다."
@@ -34,7 +34,7 @@ export const analysisRobots: AnalysisRobot[] = [
     name: "글 잘 쓰는",
     nickname: "일반 모델",
     icon: "pen",
-    model: "gpt-5.4-mini",
+    model: "gpt-5",
     pace: "균형형",
     description: "얼굴 특징을 잘 잡아내고 이해하기 쉬운 설명형 리포트로 정리해요.",
     promise: "처음 보는 사람도 바로 이해할 수 있는 문장으로 풀어냅니다."
@@ -44,10 +44,10 @@ export const analysisRobots: AnalysisRobot[] = [
     name: "핵심만 콕",
     nickname: "간단 모델",
     icon: "zap",
-    model: "gpt-5.4-nano",
+    model: "gpt-5-nano",
     pace: "가장 빠름",
     description: "바쁜 순간에도 꼭 필요한 정보만 모아 빠르게 요약해요.",
-    promise: "얼굴형, 키워드, 추천 방향을 짧고 선명하게 보여줍니다."
+    promise: "인상 밸런스, 키워드, 추천 방향을 짧고 선명하게 보여줍니다."
   }
 ];
 
@@ -387,19 +387,19 @@ const fallbackPresets: Record<string, FallbackPreset> = {
     undertone: "쿨 로즈",
     moodDescriptors: ["도회적", "맑은 깊이감", "감각적 균형"],
     scores: { softness: 74, clarity: 82, elegance: 89, approachability: 63 },
-    expressionDesire: "고유한 감각과 독창성을 드러내고 싶은 욕구",
-    stressSignal: "안전한 이미지에 맞추느라 자신만의 톤이 희미해지는 패턴",
-    brandNeed: "독창성을 이해 가능한 구조와 문장으로 번역하는 것",
-    tensionLabel: "정제된 외형과 더 깊은 표현 욕구의 간극",
+    expressionDesire: "고유한 감각과 취향을 더 선명하게 드러내고 싶은 흐름",
+    stressSignal: "무난한 선택을 반복하면 나만의 톤이 흐려질 수 있는 구간",
+    brandNeed: "나만의 취향을 사람들이 바로 이해할 수 있는 스타일로 정리하는 것",
+    tensionLabel: "정제된 분위기와 더 깊은 취향의 차이",
     insight:
-      "외형에서는 정돈된 세련미가 먼저 읽히지만, 내면에서는 보다 개인적인 결이 살아 있는 표현을 원하고 있습니다.",
+      "사진에서는 정돈된 세련미가 먼저 읽히지만, 선택한 답변에서는 보다 개인적인 결이 살아 있는 표현을 원하고 있습니다.",
     recommendation:
-      "지금 필요한 것은 더 화려한 장식이 아니라, 당신의 시그니처가 한 번에 읽히는 구조입니다.",
+      "지금 필요한 것은 더 화려한 장식이 아니라, 당신의 시그니처가 한 번에 읽히는 스타일 공식입니다.",
     hair: "레이어가 살아 있는 미디엄 헤어와 정돈된 윤곽",
     makeup: "투명한 피부 결 위에 로즈 머브 포인트",
     profileMood: "밝은 자연광, 단색 배경, 시선을 살짝 비튼 에디토리얼 무드",
     narrative:
-      "당신은 세련된 외형적 강점을 지녔지만, 내면의 독창성이 드러날 때 진짜 브랜드가 완성됩니다.",
+      "당신은 세련된 인상을 지녔고, 여기에 고유한 취향이 드러날 때 더 오래 기억되는 무드가 완성됩니다.",
     palette: ["#dce3e9", "#b7c7cf", "#e7dce5", "#8897a5"],
     avoid: ["#bb6725", "#80501c"]
   },
@@ -416,19 +416,19 @@ const fallbackPresets: Record<string, FallbackPreset> = {
     undertone: "클린 뉴트럴 쿨",
     moodDescriptors: ["프로페셔널", "도시적", "선명한 신뢰감"],
     scores: { softness: 61, clarity: 88, elegance: 92, approachability: 69 },
-    expressionDesire: "역량과 감각이 모두 읽히는 완성형 자기표현",
-    stressSignal: "성과 중심의 이미지에 갇혀 사람 냄새가 덜 읽히는 패턴",
-    brandNeed: "전문성을 유지하면서도 서사를 담는 세부 디테일",
-    tensionLabel: "완성도 높은 외형과 더 입체적인 서사의 간극",
+    expressionDesire: "실력과 감각이 함께 읽히는 완성형 이미지",
+    stressSignal: "너무 단정하게만 보이면 부드러운 매력이 덜 전해질 수 있는 구간",
+    brandNeed: "전문성을 유지하면서도 취향이 보이는 세부 디테일",
+    tensionLabel: "완성도 높은 분위기와 더 입체적인 매력의 차이",
     insight:
-      "지금의 이미지는 충분히 완성도 높지만, 사람들은 아직 당신의 감각적 레이어까지는 충분히 읽지 못할 수 있습니다.",
+      "지금의 이미지는 충분히 완성도 높지만, 작은 컬러와 질감 선택에 따라 감각적인 면이 더 살아날 수 있습니다.",
     recommendation:
-      "권위와 친밀감의 밀도를 함께 조정하면 더 오래 기억되는 브랜딩이 만들어집니다.",
+      "단정함과 부드러움의 밀도를 함께 조정하면 더 오래 기억되는 인상이 만들어집니다.",
     hair: "결이 살아 있는 스트레이트와 구조적인 볼륨 밸런스",
     makeup: "깔끔한 피부 표현과 선명한 아이 포인트",
     profileMood: "차분한 콘크리트 톤 배경, 직선적인 포즈, 미니멀 조명",
     narrative:
-      "당신은 단단하고 세련된 외형을 가졌지만, 내면의 서사와 감각이 함께 읽힐 때 더 강한 브랜드가 됩니다.",
+      "당신은 단단하고 세련된 인상을 가졌고, 감각적인 디테일이 함께 보일 때 더 강한 무드가 됩니다.",
     palette: ["#f2f2f1", "#c9d0d8", "#8b95a3", "#2f3742"],
     avoid: ["#d18d28", "#915126"]
   },
@@ -445,19 +445,19 @@ const fallbackPresets: Record<string, FallbackPreset> = {
     undertone: "라이트 웜",
     moodDescriptors: ["맑음", "친근함", "자연스러운 설득력"],
     scores: { softness: 91, clarity: 66, elegance: 75, approachability: 90 },
-    expressionDesire: "편안함 속에서도 분명한 존재감을 남기고 싶은 욕구",
-    stressSignal: "좋은 사람으로 보이기 위해 자기 기준을 뒤로 미루는 패턴",
-    brandNeed: "부드러움을 유지한 채 선택성과 주도성을 드러내는 것",
-    tensionLabel: "친근한 인상과 더 선명한 기준 사이의 간극",
+    expressionDesire: "편안함 속에서도 분명한 존재감을 남기고 싶은 흐름",
+    stressSignal: "편안한 선택만 반복하면 나만의 기준이 덜 보일 수 있는 구간",
+    brandNeed: "부드러움을 유지한 채 선명한 포인트를 더하는 것",
+    tensionLabel: "친근한 인상과 더 선명한 포인트의 차이",
     insight:
-      "외형은 매우 편안하고 따뜻하게 읽히지만, 실제 내면은 조금 더 또렷한 방향성을 원하고 있습니다.",
+      "사진에서는 편안하고 따뜻한 인상이 먼저 읽히지만, 답변에서는 조금 더 또렷한 방향성을 원하는 흐름이 보입니다.",
     recommendation:
-      "따뜻함을 잃지 않으면서도 기준이 읽히는 색, 문장, 포즈를 선택하면 브랜드 밀도가 크게 올라갑니다.",
+      "따뜻함을 유지하면서도 기준이 읽히는 색, 포즈, 디테일을 선택하면 전체 분위기가 더 선명해집니다.",
     hair: "부드러운 결감의 세미 웨이브와 얼굴선을 감싸는 볼륨",
     makeup: "생기 있는 코럴 계열과 자연스러운 윤광",
     profileMood: "샌드 톤 배경, 부드러운 측면광, 편안한 눈맞춤",
     narrative:
-      "당신은 편안하고 부드러운 외형적 강점을 지녔지만, 내면의 기준이 함께 보일 때 더 완성된 브랜드가 됩니다.",
+      "당신은 편안하고 부드러운 인상을 지녔고, 선명한 포인트가 더해질 때 더 완성도 있는 스타일이 됩니다.",
     palette: ["#f4e8d6", "#e5cdb0", "#c6a481", "#6c5b4a"],
     avoid: ["#596dd1", "#32499f"]
   }
@@ -548,7 +548,7 @@ export function buildFallbackReport(payload?: Partial<AnalysisPayload>): ReportD
         ? "리포트 요약 데이터만 저장하고 원본 이미지는 저장하지 않는 구성을 기본값으로 둡니다."
         : "원본 이미지는 분석 응답 생성에만 사용되고 영구 저장되지 않습니다.",
       privacyNote:
-        "이 결과는 브랜딩 해석을 위한 보조 분석이며, 성격이나 심리 상태를 얼굴에서 진단하지 않습니다."
+        "이 결과는 스타일 방향을 돕는 참고 리포트이며, 개인을 단정하거나 평가하지 않습니다."
     }
   };
 }
