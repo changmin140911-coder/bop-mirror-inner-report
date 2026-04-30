@@ -1,0 +1,124 @@
+import { cert, getApps, initializeApp } from "firebase-admin/app";
+import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
+import type { AnalysisPayload, HistoryItem, ReportData } from "@/lib/report-types";
+
+function getFirebaseConfig() {
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
+
+  if (!projectId || !clientEmail || !privateKey) {
+    return null;
+  }
+
+  return { projectId, clientEmail, privateKey, storageBucket };
+}
+
+export function isFirebaseConfigured() {
+  return Boolean(getFirebaseConfig());
+}
+
+function getFirebaseApp() {
+  const config = getFirebaseConfig();
+  if (!config) {
+    return null;
+  }
+
+  if (getApps().length > 0) {
+    return getApps()[0];
+  }
+
+  return initializeApp({
+    credential: cert({
+      projectId: config.projectId,
+      clientEmail: config.clientEmail,
+      privateKey: config.privateKey
+    }),
+    storageBucket: config.storageBucket
+  });
+}
+
+export async function uploadGeneratedImage(
+  reportId: string,
+  base64Data: string,
+  contentType = "image/png"
+) {
+  const app = getFirebaseApp();
+  const config = getFirebaseConfig();
+
+  if (!app || !config?.storageBucket) {
+    return null;
+  }
+
+  const bucket = getStorage(app).bucket(config.storageBucket);
+  const extension = contentType === "image/webp" ? "webp" : "png";
+  const storagePath = `reports/${reportId}/generated-moodboard.${extension}`;
+  const file = bucket.file(storagePath);
+
+  await file.save(Buffer.from(base64Data, "base64"), {
+    resumable: false,
+    contentType,
+    metadata: {
+      cacheControl: "private, max-age=0, no-transform"
+    }
+  });
+
+  return storagePath;
+}
+
+export async function saveReportToFirebase(
+  report: ReportData,
+  payload: AnalysisPayload,
+  diagnostics: { generatedImageStored: boolean }
+) {
+  const app = getFirebaseApp();
+  if (!app || !payload.consentToStore) {
+    return null;
+  }
+
+  const db = getFirestore(app);
+  const docRef = await db.collection("mirrorReports").add({
+    nickname: payload.nickname || null,
+    brandFocus: payload.brandFocus || null,
+    answers: payload.answers,
+    report,
+    source: report.source ?? "demo",
+    generatedImageStored: diagnostics.generatedImageStored,
+    createdAt: FieldValue.serverTimestamp()
+  });
+
+  return docRef.id;
+}
+
+export async function listRecentReports(limit = 6): Promise<HistoryItem[]> {
+  const app = getFirebaseApp();
+  if (!app) {
+    return [];
+  }
+
+  const db = getFirestore(app);
+  const snapshot = await db
+    .collection("mirrorReports")
+    .orderBy("createdAt", "desc")
+    .limit(limit)
+    .get();
+
+  return snapshot.docs.map((doc) => {
+    const data = doc.data() as {
+      createdAt?: { toDate?: () => Date };
+      report?: ReportData;
+      source?: "demo" | "openai";
+    };
+
+    return {
+      id: doc.id,
+      createdAt: data.createdAt?.toDate?.().toISOString() ?? new Date().toISOString(),
+      persona: data.report?.profile.persona ?? "Unknown Persona",
+      summary: data.report?.profile.summary ?? "",
+      keywords: data.report?.profile.keywords ?? [],
+      source: data.source ?? "demo"
+    };
+  });
+}

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
-import { demoReport } from "@/lib/demo-report";
+import { buildFallbackReport, questionnaire } from "@/lib/report-types";
 
 export async function GET() {
-  return NextResponse.json(demoReport);
+  return NextResponse.json({
+    questionnaire,
+    demoReport: buildFallbackReport()
+  });
 }
