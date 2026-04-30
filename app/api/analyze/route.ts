@@ -37,6 +37,7 @@ export async function POST(request: Request) {
   const formData = await request.formData();
   const file = formData.get("image");
   const nickname = String(formData.get("nickname") || "");
+  const gender = String(formData.get("gender") || "");
   const brandFocus = String(formData.get("brandFocus") || "");
   const consentToStore = formData.get("consentToStore") === "true";
   const answers = parseAnswers(String(formData.get("answers") || ""));
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
   const buffer = Buffer.from(await file.arrayBuffer());
   const payload: AnalysisPayload = {
     nickname,
+    gender,
     brandFocus,
     consentToStore,
     answers,

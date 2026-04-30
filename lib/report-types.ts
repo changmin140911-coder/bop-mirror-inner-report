@@ -34,7 +34,7 @@ export const analysisRobots: AnalysisRobot[] = [
     name: "글 잘 쓰는",
     nickname: "일반 모델",
     icon: "pen",
-    model: "gpt-5.2",
+    model: "gpt-5.4-mini",
     pace: "균형형",
     description: "얼굴 특징을 잘 잡아내고 이해하기 쉬운 설명형 리포트로 정리해요.",
     promise: "처음 보는 사람도 바로 이해할 수 있는 문장으로 풀어냅니다."
@@ -44,7 +44,7 @@ export const analysisRobots: AnalysisRobot[] = [
     name: "핵심만 콕",
     nickname: "간단 모델",
     icon: "zap",
-    model: "gpt-5.2-mini",
+    model: "gpt-5.4-nano",
     pace: "가장 빠름",
     description: "바쁜 순간에도 꼭 필요한 정보만 모아 빠르게 요약해요.",
     promise: "얼굴형, 키워드, 추천 방향을 짧고 선명하게 보여줍니다."
@@ -120,12 +120,7 @@ export type ReportDiagnostics = {
   generatedMoodboard: boolean;
 };
 
-export type QuestionnaireId =
-  | "presence"
-  | "decision"
-  | "tension"
-  | "energy"
-  | "expression";
+export type QuestionnaireId = string;
 
 export type QuestionnaireAnswer = {
   id: QuestionnaireId;
@@ -136,6 +131,7 @@ export type QuestionnaireAnswer = {
 
 export type AnalysisPayload = {
   nickname: string;
+  gender: string;
   brandFocus: string;
   consentToStore: boolean;
   answers: QuestionnaireAnswer[];
@@ -169,12 +165,48 @@ export const questionnaire = [
     ]
   },
   {
+    id: "attention",
+    prompt: "사람들이 나를 기억할 때 가장 먼저 떠올렸으면 하는 이미지는 무엇인가요?",
+    options: [
+      { value: "distinctive", label: "감각적인 사람" },
+      { value: "trust", label: "믿음이 가는 사람" },
+      { value: "warm", label: "기분 좋아지는 사람" }
+    ]
+  },
+  {
+    id: "compliment",
+    prompt: "가장 듣고 싶은 칭찬은 무엇인가요?",
+    options: [
+      { value: "refined", label: "분위기가 고급스러워요" },
+      { value: "expression", label: "자기 색이 분명해요" },
+      { value: "balance", label: "함께 있으면 편안해요" }
+    ]
+  },
+  {
     id: "decision",
     prompt: "중요한 선택 앞에서 가장 크게 고려하는 기준은 무엇인가요?",
     options: [
       { value: "structure", label: "완성도와 기준" },
       { value: "meaning", label: "나다운 의미" },
       { value: "balance", label: "관계와 조화" }
+    ]
+  },
+  {
+    id: "pace",
+    prompt: "내가 가장 편안하게 움직이는 속도는 어떤 쪽인가요?",
+    options: [
+      { value: "structure", label: "계획적으로 차근차근" },
+      { value: "expression", label: "영감이 올 때 과감하게" },
+      { value: "trust", label: "상황을 보며 유연하게" }
+    ]
+  },
+  {
+    id: "stress_response",
+    prompt: "긴장되는 순간 나는 주로 어떻게 반응하나요?",
+    options: [
+      { value: "authority", label: "더 완벽하게 준비해요" },
+      { value: "distant", label: "혼자 정리할 시간이 필요해요" },
+      { value: "warm", label: "주변 분위기를 먼저 살펴요" }
     ]
   },
   {
@@ -187,6 +219,24 @@ export const questionnaire = [
     ]
   },
   {
+    id: "visibility",
+    prompt: "주목받는 상황에서 나는 어떤 마음이 더 큰가요?",
+    options: [
+      { value: "authority", label: "잘 해내고 싶어요" },
+      { value: "distinctive", label: "나답게 보이고 싶어요" },
+      { value: "safe", label: "너무 튀지 않았으면 해요" }
+    ]
+  },
+  {
+    id: "relationship",
+    prompt: "관계 안에서 나의 장점은 무엇에 가깝나요?",
+    options: [
+      { value: "trust", label: "상대가 안심하게 해요" },
+      { value: "structure", label: "방향을 잡아줘요" },
+      { value: "poetic", label: "감정을 섬세하게 읽어요" }
+    ]
+  },
+  {
     id: "energy",
     prompt: "브랜딩에서 지금 가장 강화하고 싶은 에너지는 무엇인가요?",
     options: [
@@ -196,12 +246,102 @@ export const questionnaire = [
     ]
   },
   {
+    id: "hidden_wish",
+    prompt: "사실 마음속에서 더 꺼내고 싶은 모습은 무엇인가요?",
+    options: [
+      { value: "expression", label: "더 자유로운 표현" },
+      { value: "authority", label: "더 선명한 존재감" },
+      { value: "natural", label: "더 자연스러운 나다움" }
+    ]
+  },
+  {
+    id: "style_fear",
+    prompt: "스타일링에서 가장 피하고 싶은 느낌은 무엇인가요?",
+    options: [
+      { value: "blurred", label: "애매하고 흐릿함" },
+      { value: "distant", label: "너무 차가운 느낌" },
+      { value: "safe", label: "평범하게 묻히는 느낌" }
+    ]
+  },
+  {
+    id: "routine",
+    prompt: "평소 옷을 고를 때 가장 먼저 보는 것은 무엇인가요?",
+    options: [
+      { value: "refined", label: "깔끔한 완성도" },
+      { value: "meaning", label: "내 취향과 분위기" },
+      { value: "warm", label: "편안함과 활용도" }
+    ]
+  },
+  {
+    id: "brand_need",
+    prompt: "지금 나에게 가장 필요한 변화는 무엇인가요?",
+    options: [
+      { value: "authority", label: "전문적으로 보이기" },
+      { value: "distinctive", label: "더 기억에 남기" },
+      { value: "trust", label: "더 친근하게 다가가기" }
+    ]
+  },
+  {
+    id: "camera",
+    prompt: "카메라 앞에서 가장 원하는 느낌은 무엇인가요?",
+    options: [
+      { value: "editorial", label: "세련된 화보 느낌" },
+      { value: "natural", label: "자연스럽고 맑은 느낌" },
+      { value: "poetic", label: "분위기 있는 느낌" }
+    ]
+  },
+  {
+    id: "color_mood",
+    prompt: "끌리는 컬러 분위기는 무엇인가요?",
+    options: [
+      { value: "refined", label: "차분한 뉴트럴" },
+      { value: "warm", label: "생기 있는 웜톤" },
+      { value: "distinctive", label: "맑고 선명한 포인트" }
+    ]
+  },
+  {
+    id: "decision_shadow",
+    prompt: "선택이 어려워질 때 나를 막는 것은 무엇인가요?",
+    options: [
+      { value: "safe", label: "실패하고 싶지 않음" },
+      { value: "blurred", label: "내 기준이 흐려짐" },
+      { value: "distant", label: "너무 많이 생각함" }
+    ]
+  },
+  {
+    id: "inner_voice",
+    prompt: "내 안의 목소리는 주로 무엇을 말하나요?",
+    options: [
+      { value: "meaning", label: "진짜 나다운가?" },
+      { value: "structure", label: "충분히 완성됐나?" },
+      { value: "balance", label: "무리하지 않아도 될까?" }
+    ]
+  },
+  {
+    id: "ideal_day",
+    prompt: "가장 나답다고 느끼는 하루는 어떤 모습인가요?",
+    options: [
+      { value: "expression", label: "감각을 마음껏 쓰는 날" },
+      { value: "authority", label: "성과가 또렷한 날" },
+      { value: "trust", label: "편안하게 연결되는 날" }
+    ]
+  },
+  {
     id: "expression",
     prompt: "이상적인 프로필 이미지는 어떤 분위기에 더 가까운가요?",
     options: [
       { value: "editorial", label: "도시적 에디토리얼" },
       { value: "poetic", label: "감각적이고 서정적" },
       { value: "natural", label: "자연스럽고 단단함" }
+    ]
+  },
+  {
+    id: "final_direction",
+    prompt: "이번 리포트에서 가장 알고 싶은 것은 무엇인가요?",
+    options: [
+      { value: "refined", label: "나에게 맞는 세련된 스타일" },
+      { value: "distinctive", label: "나만의 분위기와 강점" },
+      { value: "warm", label: "더 예뻐 보이는 실전 조합" }
     ]
   }
 ] as const;

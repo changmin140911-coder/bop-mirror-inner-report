@@ -172,6 +172,9 @@ Return valid JSON that matches the schema exactly.
 Brand focus:
 ${payload.brandFocus || "없음"}
 
+Self-reported gender or styling context:
+${payload.gender || "미응답"}
+
 Selected analysis robot:
 ${robot.name} (${robot.nickname})
 ${robot.description}
@@ -256,8 +259,8 @@ export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<Analy
     };
   }
 
-  const analysisModel = process.env.OPENAI_ANALYSIS_MODEL || selectedRobot.model;
-  const imageModel = process.env.OPENAI_IMAGE_MODEL || "gpt-image-1.5";
+  const analysisModel = process.env.OPENAI_ANALYSIS_MODEL_OVERRIDE || selectedRobot.model;
+  const imageModel = process.env.OPENAI_IMAGE_MODEL_OVERRIDE || "gpt-image-2";
 
   try {
     const dataUrl = `data:${payload.imageMimeType};base64,${payload.imageBase64}`;

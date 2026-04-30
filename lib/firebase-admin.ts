@@ -79,8 +79,14 @@ export async function saveReportToFirebase(
   }
 
   const db = getFirestore(app);
-  const docRef = await db.collection("mirrorReports").add({
+  const docId = report.id;
+  if (!docId) {
+    return null;
+  }
+
+  await db.collection("mirrorReports").doc(docId).set({
     nickname: payload.nickname || null,
+    gender: payload.gender || null,
     brandFocus: payload.brandFocus || null,
     answers: payload.answers,
     report,
@@ -89,7 +95,64 @@ export async function saveReportToFirebase(
     createdAt: FieldValue.serverTimestamp()
   });
 
-  return docRef.id;
+  return docId;
+}
+
+export async function getReportFromFirebase(reportId: string) {
+  const app = getFirebaseApp();
+  if (!app) {
+    return null;
+  }
+
+  const db = getFirestore(app);
+  const doc = await db.collection("mirrorReports").doc(reportId).get();
+  if (!doc.exists) {
+    return null;
+  }
+
+  const data = doc.data() as { report?: ReportData };
+  return data.report ?? null;
+}
+
+export async function listAdminReports(limit = 25) {
+  const app = getFirebaseApp();
+  if (!app) {
+    return [];
+  }
+
+  const db = getFirestore(app);
+  const snapshot = await db
+    .collection("mirrorReports")
+    .orderBy("createdAt", "desc")
+    .limit(limit)
+    .get();
+
+  return snapshot.docs.map((doc) => {
+    const data = doc.data() as {
+      nickname?: string | null;
+      gender?: string | null;
+      brandFocus?: string | null;
+      answers?: AnalysisPayload["answers"];
+      createdAt?: { toDate?: () => Date };
+      report?: ReportData;
+      source?: "demo" | "openai";
+      generatedImageStored?: boolean;
+    };
+
+    return {
+      id: doc.id,
+      nickname: data.nickname ?? "",
+      gender: data.gender ?? "",
+      brandFocus: data.brandFocus ?? "",
+      createdAt: data.createdAt?.toDate?.().toISOString() ?? data.report?.createdAt ?? "",
+      persona: data.report?.profile.persona ?? "",
+      summary: data.report?.profile.summary ?? "",
+      keywords: data.report?.profile.keywords ?? [],
+      source: data.source ?? data.report?.source ?? "demo",
+      storedImage: Boolean(data.generatedImageStored),
+      answersCount: data.answers?.length ?? 0
+    };
+  });
 }
 
 export async function listRecentReports(limit = 6): Promise<HistoryItem[]> {
