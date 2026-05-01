@@ -2,9 +2,11 @@ import OpenAI from "openai";
 import {
   buildFallbackReport,
   getRobotByDepth,
+  type ImageGenerationDiagnostic,
   type AnalysisPayload,
   type AnalysisResponse,
-  type ReportData
+  type ReportData,
+  type ReportVisualSlot
 } from "@/lib/report-types";
 
 const reportSchema = {
@@ -397,19 +399,144 @@ function getConfiguredImageModel(robot: ReturnType<typeof getRobotByDepth>) {
   return perDepth || process.env.OPENAI_IMAGE_MODEL_OVERRIDE || robot.imageModel;
 }
 
+function buildVisualRequests(report: ReportData): Array<{
+  id: string;
+  section: string;
+  title: string;
+  caption: string;
+  fallback: ReportVisualSlot["fallbackVisualType"];
+  prompt: string;
+}> {
+  const palette = report.color.palette.join(", ");
+  const keywords = report.profile.keywords.join(", ");
+
+  return [
+    {
+      id: "hairMakeup",
+      section: "헤어와 메이크업",
+      title: "추천 헤어와 메이크업 레퍼런스",
+      caption: "추천 헤어 길이, 앞머리, 피부 표현과 눈매 포인트를 한 장으로 정리한 AI 레퍼런스입니다.",
+      fallback: "makeup",
+      prompt: `
+Create a premium Korean personal styling report reference board.
+Subject matter: women's hairstyle and makeup recommendations, not the uploaded person.
+Show 4 editorial tiles: recommended hair length, bangs direction, skin finish, eye makeup direction.
+Hair direction: ${report.recommendation.hair}.
+Makeup direction: ${report.recommendation.makeup}.
+Color mood: ${report.color.seasonLabel}, ${report.color.undertone}, palette ${palette}.
+Style keywords: ${keywords}.
+Clean ivory report background, soft rose accent, realistic beauty reference photography, no text, no logos, no before-after transformation.
+`.trim()
+    },
+    {
+      id: "fashionMood",
+      section: "패션 무드",
+      title: "추천 의상 룩북",
+      caption: "추천 무드와 의상 요소를 룩북처럼 보여주는 AI 스타일 카드입니다.",
+      fallback: "moodboard",
+      prompt: `
+Create a refined women's outfit lookbook moodboard for a Korean personal styling report.
+Show 3 outfit cards: soft minimal, clean feminine, natural elegant.
+Include tops, bottoms, dress or skirt, outerwear, bag, shoes, and accessories.
+Outfit guidance: ${(report.recommendation.outfitDetails ?? []).join(", ")}.
+Mood: ${report.recommendation.profileMood}.
+Color palette: ${palette}.
+Premium editorial layout, ivory paper, dusty rose accents, realistic fashion references, no text, no logos, do not depict the uploaded person.
+`.trim()
+    },
+    {
+      id: "styleSummary",
+      section: "최종 스타일 요약",
+      title: "최종 스타일 공식 보드",
+      caption: "컬러, 헤어, 메이크업, 패션 무드를 한 번에 보는 최종 AI 보드입니다.",
+      fallback: "summary",
+      prompt: `
+Create one premium personal styling summary board.
+Include color swatches, hair reference, makeup textures, and outfit mood elements.
+Persona: ${report.profile.persona}.
+Keywords: ${keywords}.
+Best tone: ${report.color.seasonLabel}, ${report.color.undertone}.
+Hair: ${report.recommendation.hair}.
+Makeup: ${report.recommendation.makeup}.
+Fashion mood: ${report.recommendation.profileMood}.
+Minimal luxury Korean styling PDF aesthetic, no text, no logos, no medical or psychological imagery, do not recreate the uploaded person.
+`.trim()
+    }
+  ];
+}
+
+async function generateVisualSlot(
+  client: OpenAI,
+  model: string,
+  quality: "low" | "medium" | "high",
+  request: ReturnType<typeof buildVisualRequests>[number]
+): Promise<{ visual?: ReportVisualSlot; diagnostic: ImageGenerationDiagnostic }> {
+  try {
+    const result = await client.images.generate({
+      model,
+      prompt: request.prompt,
+      size: "1024x1024",
+      quality
+    });
+    const base64Image = result.data?.[0]?.b64_json;
+
+    if (!base64Image) {
+      return {
+        diagnostic: {
+          section: request.section,
+          ok: false,
+          model,
+          error: "이미지 API 응답에 b64_json이 없습니다."
+        }
+      };
+    }
+
+    return {
+      visual: {
+        id: request.id,
+        section: request.section,
+        imageType: request.fallback,
+        imageTitle: request.title,
+        imagePrompt: request.prompt,
+        imageCaption: request.caption,
+        imageUrl: `data:image/png;base64,${base64Image}`,
+        generatedImageUrl: `data:image/png;base64,${base64Image}`,
+        fallbackType: request.fallback,
+        fallbackVisualType: request.fallback,
+        referenceImages: []
+      },
+      diagnostic: {
+        section: request.section,
+        ok: true,
+        model
+      }
+    };
+  } catch (error) {
+    return {
+      diagnostic: {
+        section: request.section,
+        ok: false,
+        model,
+        error: error instanceof Error ? error.message : "알 수 없는 이미지 생성 오류"
+      }
+    };
+  }
+}
+
 export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<AnalysisResponse> {
   const client = getOpenAIClient();
   const selectedRobot = getRobotByDepth(payload.analysisDepth);
 
   if (!client) {
-    return {
-      report: buildFallbackReport(payload),
-      diagnostics: {
-        usedLiveAnalysis: false,
-        storedInFirebase: false,
-        generatedMoodboard: false
-      }
-    };
+      return {
+        report: buildFallbackReport(payload),
+        diagnostics: {
+          usedLiveAnalysis: false,
+          storedInFirebase: false,
+          generatedMoodboard: false,
+          generatedVisuals: 0
+        }
+      };
   }
 
   const analysisModel = getConfiguredAnalysisModel(selectedRobot);
@@ -453,29 +580,32 @@ export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<Analy
     report.analysisDepth = selectedRobot.id;
     report.robotName = selectedRobot.name;
 
-    try {
-      const imageResult = await client.images.generate({
-        model: imageModel,
-        prompt: `${report.recommendation.moodboardPrompt}
-Create a refined women's styling moodboard with realistic editorial references:
-1. outfit texture and silhouette
-2. makeup color story
-3. hairstyle mood
-4. atmosphere and location inspiration
-Do not recreate or identify the uploaded person. Do not imply medical or psychological diagnosis.`,
-        size: "1536x1024",
-        quality: selectedRobot.imageQuality
-      });
+    const visualResults: Awaited<ReturnType<typeof generateVisualSlot>>[] = [];
+    for (const request of buildVisualRequests(report)) {
+      visualResults.push(
+        await generateVisualSlot(client, imageModel, selectedRobot.imageQuality, request)
+      );
+    }
+    const sectionVisuals = visualResults
+      .map((result) => result.visual)
+      .filter((visual): visual is ReportVisualSlot => Boolean(visual));
+    const imageGeneration = visualResults.map((result) => result.diagnostic);
 
-      const base64Image = imageResult.data?.[0]?.b64_json;
-      if (base64Image) {
-        report.generatedImage = {
-          alt: `${report.profile.persona} moodboard`,
-          dataUrl: `data:image/png;base64,${base64Image}`
-        };
-      }
-    } catch {
-      report.generatedImage = undefined;
+    report.visuals = {
+      ...(report.visuals ?? {}),
+      sectionVisuals,
+      visuals: sectionVisuals,
+      generatedImageUrl: sectionVisuals[0]?.generatedImageUrl ?? null,
+      imagePrompt: sectionVisuals[0]?.imagePrompt ?? report.recommendation.moodboardPrompt,
+      imageCaption: sectionVisuals[0]?.imageCaption ?? "AI 추천 스타일 보드",
+      fallbackVisualType: sectionVisuals[0]?.fallbackVisualType ?? "moodboard"
+    };
+
+    if (sectionVisuals[1]?.generatedImageUrl) {
+      report.generatedImage = {
+        alt: `${report.profile.persona} outfit moodboard`,
+        dataUrl: sectionVisuals[1].generatedImageUrl
+      };
     }
 
     return {
@@ -483,7 +613,9 @@ Do not recreate or identify the uploaded person. Do not imply medical or psychol
       diagnostics: {
         usedLiveAnalysis: true,
         storedInFirebase: false,
-        generatedMoodboard: Boolean(report.generatedImage?.dataUrl)
+        generatedMoodboard: sectionVisuals.length > 0,
+        generatedVisuals: sectionVisuals.length,
+        imageGeneration
       }
     };
   } catch {
@@ -492,7 +624,8 @@ Do not recreate or identify the uploaded person. Do not imply medical or psychol
       diagnostics: {
         usedLiveAnalysis: false,
         storedInFirebase: false,
-        generatedMoodboard: false
+        generatedMoodboard: false,
+        generatedVisuals: 0
       }
     };
   }

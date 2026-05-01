@@ -507,6 +507,114 @@ function InnerPreferenceSection({ data }: { data: ReportPageModel }) {
   );
 }
 
+function StyleSnapshotSection({ data, report }: { data: ReportPageModel; report: ReportData }) {
+  return (
+    <ReportPage
+      number="01"
+      kicker="Style Snapshot"
+      title="나에게 먼저 보이는 이미지"
+      subtitle={data.imageDiagnosis.impression}
+    >
+      <div className="diagnosisVisualLayout">
+        <VisualFrame visual={data.visuals.sections.diagnosis} data={data} title="Mood Board" />
+        <div>
+          <h3>{report.profile.summary}</h3>
+          <VisualPointCards
+            items={data.imageDiagnosis.strengths.slice(0, 3).map((item, index) => ({
+              title: `Point ${index + 1}`,
+              body: item
+            }))}
+          />
+          <div className="pdfTagRow">
+            {data.imageDiagnosis.mood.slice(0, 5).map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="pdfCardGrid three">
+        <SummaryCard title="분위기" body={report.profile.archetypeLine} />
+        <SummaryCard title="얼굴 밸런스" body={data.faceBalance.proportionLabel} />
+        <SummaryCard title="스타일 목표" body={data.innerPreference.goal} />
+      </div>
+    </ReportPage>
+  );
+}
+
+function HairBeautySection({ data }: { data: ReportPageModel }) {
+  return (
+    <ReportPage
+      number="03"
+      kicker="Hair & Beauty"
+      title="헤어와 메이크업 추천"
+      subtitle="헤어 길이, 앞머리, 피부 표현, 눈매 포인트를 한 번에 적용하기 쉽게 정리했습니다."
+    >
+      <VisualFrame
+        visual={data.visuals.sections.hairMakeup ?? data.visuals.sections.hairLength}
+        data={data}
+        title="AI Beauty Board"
+      />
+      <div className="guideVisualSplit">
+        <HairStyleBoard data={data} />
+        <div className="heroGuideCard">
+          <Scissors size={24} />
+          <span>추천 길이</span>
+          <h3>{data.hairLength.recommended}</h3>
+          <p>{data.hairLength.reason}</p>
+        </div>
+      </div>
+      <BangsVisualCards data={data} />
+      <MakeupReferenceBoard data={data} mode="base" />
+    </ReportPage>
+  );
+}
+
+function FashionFinalSection({ report, data }: { report: ReportData; data: ReportPageModel }) {
+  const summary = [
+    { icon: Scissors, title: "Hair", body: data.finalSummary.hair },
+    { icon: Brush, title: "Makeup", body: data.finalSummary.makeup },
+    { icon: Shirt, title: "Fashion", body: data.finalSummary.fashion },
+    { icon: Palette, title: "Color", body: data.finalSummary.color },
+    { icon: Heart, title: "Image", body: data.finalSummary.image }
+  ];
+
+  return (
+    <ReportPage
+      number="04"
+      kicker="Fashion & Final"
+      title="패션 무드와 최종 공식"
+      subtitle="가장 바로 따라 하기 쉬운 룩 방향과 전체 스타일 공식을 압축했습니다."
+    >
+      {report.generatedImage?.dataUrl || data.visuals.sections.fashionMood?.generatedImageUrl ? (
+        <VisualFrame visual={data.visuals.sections.fashionMood} data={data} title="AI Outfit Board" />
+      ) : null}
+      <OutfitMoodCards data={data} />
+      <div className="summaryMatrix compactSummary">
+        {summary.map((item) => {
+          const Icon = item.icon;
+          return (
+            <article key={item.title}>
+              <Icon size={18} />
+              <span>{item.title}</span>
+              <p>{item.body}</p>
+            </article>
+          );
+        })}
+      </div>
+      <div className="reportActionGrid inlineActions">
+        <button className="primaryButton" onClick={() => void captureReport()} type="button">
+          <Download size={18} />
+          리포트 이미지 저장
+        </button>
+        <button className="secondaryButton" onClick={() => window.print()} type="button">
+          <Printer size={18} />
+          PDF로 저장하기
+        </button>
+      </div>
+    </ReportPage>
+  );
+}
+
 function FaceBalanceSection({ data }: { data: ReportPageModel }) {
   return (
     <ReportPage
@@ -817,6 +925,10 @@ export function ReportView({ report }: { report: ReportData }) {
           <Printer size={16} />
           PDF
         </button>
+        <button onClick={() => void captureReport()} type="button">
+          <Download size={16} />
+          저장
+        </button>
         <a href="/start">
           <Eye size={16} />
           다시 분석
@@ -824,22 +936,10 @@ export function ReportView({ report }: { report: ReportData }) {
       </nav>
       <div className="reportBook" id="premium-report">
         <ReportCover report={report} data={data} />
-        <ReportOverview data={data} />
-        <ImageDiagnosisSection data={data} report={report} />
-        <InnerPreferenceSection data={data} />
-        <FaceBalanceSection data={data} />
-        <FeatureMoodSection data={data} />
-        <HairLengthGuide data={data} />
-        <BangsGuide data={data} />
-        <HairAvoidGuide data={data} />
-        <BaseMakeupGuide data={data} />
-        <EyeMakeupGuide data={data} />
-        <ContourHighlightGuide data={data} />
-        <FashionMoodSection report={report} data={data} />
-        <NecklineGuide data={data} />
+        <StyleSnapshotSection data={data} report={report} />
         <ColorPaletteGuide data={data} report={report} />
-        <FinalSummarySection data={data} />
-        <ExportSection report={report} />
+        <HairBeautySection data={data} />
+        <FashionFinalSection report={report} data={data} />
       </div>
     </main>
   );

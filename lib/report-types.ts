@@ -44,6 +44,13 @@ export type ReportVisualSlot = {
   referenceImages?: string[];
 };
 
+export type ImageGenerationDiagnostic = {
+  section: string;
+  ok: boolean;
+  model: string;
+  error?: string;
+};
+
 export const analysisRobots: AnalysisRobot[] = [
   {
     id: "detail",
@@ -51,7 +58,7 @@ export const analysisRobots: AnalysisRobot[] = [
     nickname: "고급 모델",
     icon: "eye",
     model: "gpt-5.5",
-    imageModel: "gpt-image-2",
+    imageModel: "gpt-image-1.5",
     imageQuality: "high",
     pace: "가장 섬세함",
     description: "시간이 조금 걸리지만 얼굴의 작은 균형과 분위기까지 자세히 읽어요.",
@@ -63,7 +70,7 @@ export const analysisRobots: AnalysisRobot[] = [
     nickname: "일반 모델",
     icon: "pen",
     model: "gpt-5.4-mini",
-    imageModel: "gpt-image-1.5",
+    imageModel: "gpt-image-1",
     imageQuality: "medium",
     pace: "균형형",
     description: "얼굴 특징을 잘 잡아내고 이해하기 쉬운 설명형 리포트로 정리해요.",
@@ -184,6 +191,8 @@ export type ReportDiagnostics = {
   usedLiveAnalysis: boolean;
   storedInFirebase: boolean;
   generatedMoodboard: boolean;
+  generatedVisuals?: number;
+  imageGeneration?: ImageGenerationDiagnostic[];
 };
 
 export type QuestionnaireId = string;

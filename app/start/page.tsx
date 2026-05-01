@@ -145,7 +145,37 @@ export default function StartPage() {
             fallbackVisualType: "user-photo" as const
           }
         };
-        window.localStorage.setItem(`bop-report-${reportId}`, JSON.stringify(reportWithVisuals));
+        const strippedReport = {
+          ...reportWithVisuals,
+          generatedImage: reportWithVisuals.generatedImage
+            ? { ...reportWithVisuals.generatedImage, dataUrl: null }
+            : undefined,
+          visuals: reportWithVisuals.visuals
+            ? {
+                ...reportWithVisuals.visuals,
+                sourceUserImage: null,
+                heroImage: null,
+                generatedImageUrl: null,
+                imageUrl: null,
+                sectionVisuals: reportWithVisuals.visuals.sectionVisuals?.map((visual) => ({
+                  ...visual,
+                  imageUrl: null,
+                  generatedImageUrl: null
+                })),
+                visuals: reportWithVisuals.visuals.visuals?.map((visual) => ({
+                  ...visual,
+                  imageUrl: null,
+                  generatedImageUrl: null
+                }))
+              }
+            : undefined
+        };
+        try {
+          window.sessionStorage.setItem(`bop-report-${reportId}`, JSON.stringify(reportWithVisuals));
+          window.localStorage.setItem(`bop-report-${reportId}`, JSON.stringify(strippedReport));
+        } catch {
+          window.localStorage.setItem(`bop-report-${reportId}`, JSON.stringify(strippedReport));
+        }
         router.push(`/report/${reportId}`);
       } catch (error) {
         setIsAnalyzing(false);

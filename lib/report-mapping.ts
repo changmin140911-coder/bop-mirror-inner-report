@@ -323,7 +323,10 @@ function makeSectionVisuals(report: ReportData) {
     )
   ];
 
-  return Object.fromEntries(defaults.map((visual) => [visual.id, existing.get(visual.id) ?? visual]));
+  return {
+    ...Object.fromEntries(defaults.map((visual) => [visual.id, visual])),
+    ...Object.fromEntries(existingVisuals.map((visual) => [visual.id, visual]))
+  };
 }
 
 function makeHairLength(report: ReportData) {

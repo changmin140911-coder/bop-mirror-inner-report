@@ -86,11 +86,29 @@ export async function saveReportToFirebase(
 
   const storedReport: ReportData = {
     ...report,
+    generatedImage: report.generatedImage
+      ? {
+          ...report.generatedImage,
+          dataUrl: null
+        }
+      : undefined,
     visuals: report.visuals
       ? {
           ...report.visuals,
           sourceUserImage: null,
-          heroImage: null
+          heroImage: null,
+          generatedImageUrl: null,
+          imageUrl: null,
+          sectionVisuals: report.visuals.sectionVisuals?.map((visual) => ({
+            ...visual,
+            imageUrl: null,
+            generatedImageUrl: null
+          })),
+          visuals: report.visuals.visuals?.map((visual) => ({
+            ...visual,
+            imageUrl: null,
+            generatedImageUrl: null
+          }))
         }
       : undefined
   };

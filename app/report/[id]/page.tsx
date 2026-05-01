@@ -17,7 +17,9 @@ export default function ReportPage() {
     let active = true;
 
     async function loadReport() {
-      const cached = window.localStorage.getItem(`bop-report-${reportId}`);
+      const cached =
+        window.sessionStorage.getItem(`bop-report-${reportId}`) ??
+        window.localStorage.getItem(`bop-report-${reportId}`);
       if (cached) {
         try {
           const parsed = JSON.parse(cached) as ReportData;
