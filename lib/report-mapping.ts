@@ -24,6 +24,7 @@ export type ColorToken = {
 };
 
 export type ReportPageModel = {
+  isMaleStyling: boolean;
   clientName: string;
   clientInitial: string;
   createdLabel: string;
@@ -145,6 +146,10 @@ function safeText(value: string | undefined | null, fallback = fallbackNotice) {
   return text && text.length > 0 ? text : fallback;
 }
 
+function isMaleReport(report: ReportData) {
+  return /남|male|man|men/i.test(report.intake?.gender ?? "");
+}
+
 function clampPercent(value: number | undefined) {
   if (!Number.isFinite(value)) return 50;
   return Math.max(0, Math.min(100, Math.round(value ?? 50)));
@@ -239,6 +244,19 @@ function makeSectionVisuals(report: ReportData) {
   const persona = safeText(report.profile.persona, "개인 스타일링");
   const tone = safeText(report.color.seasonLabel, "추천 컬러");
   const hair = safeText(report.recommendation.hair, "추천 헤어");
+  const isMale = isMaleReport(report);
+  const hairPrompt = isMale
+    ? `Korean men's haircut and grooming reference board for ${hair}, premium barber and salon report style. No dresses, skirts, feminine bangs, or heavy makeup.`
+    : `Korean personal hair reference board for ${hair}, premium salon report style.`;
+  const bangsPrompt = isMale
+    ? "Visual comparison cards for men's front hair and parting: dandy fringe, comma hair, side part, leaf bang, open forehead."
+    : "Visual comparison cards for see-through bangs, side bangs, curtain bangs, full bangs, no bangs.";
+  const makeupPrompt = isMale
+    ? `Men's grooming finish reference for ${tone}: clean skin tone, eyebrow grooming, lip balm, shaving or beard line care.`
+    : `Skin finish mood reference for ${tone}, semi-glow, soft matte, clean base.`;
+  const eyePrompt = isMale
+    ? "Men's facial detail grooming direction with eyebrow shape, clean under-eye tone, and natural feature clarity."
+    : "Soft Korean eye makeup direction with natural shadow, thin eyeliner, clean lashes.";
 
   const defaults = [
     makeVisualSlot(
@@ -259,14 +277,14 @@ function makeSectionVisuals(report: ReportData) {
     makeVisualSlot(
       "hairLength",
       "헤어 길이 가이드",
-      `Korean women's hair reference board for ${hair}, premium salon report style.`,
+      hairPrompt,
       "추천 헤어 길이 예시",
       "hair"
     ),
     makeVisualSlot(
       "bangs",
       "앞머리 가이드",
-      "Visual comparison cards for see-through bangs, side bangs, curtain bangs, full bangs, no bangs.",
+      bangsPrompt,
       "앞머리 유형별 적합도 카드",
       "bangs"
     ),
@@ -279,16 +297,16 @@ function makeSectionVisuals(report: ReportData) {
     ),
     makeVisualSlot(
       "baseMakeup",
-      "베이스 메이크업",
-      `Skin finish mood reference for ${tone}, semi-glow, soft matte, clean base.`,
-      "피부 표현 질감 예시",
+      isMale ? "피부와 그루밍" : "베이스 메이크업",
+      makeupPrompt,
+      isMale ? "피부 정돈과 그루밍 질감 예시" : "피부 표현 질감 예시",
       "makeup"
     ),
     makeVisualSlot(
       "eyeMakeup",
-      "아이 메이크업",
-      "Soft Korean eye makeup direction with natural shadow, thin eyeliner, clean lashes.",
-      "눈매를 살리는 메이크업 방향",
+      isMale ? "눈썹과 인상 정돈" : "아이 메이크업",
+      eyePrompt,
+      isMale ? "눈썹과 눈가를 정돈하는 방향" : "눈매를 살리는 메이크업 방향",
       "eye"
     ),
     makeVisualSlot(
@@ -333,10 +351,79 @@ function makeHairLength(report: ReportData) {
   const shape = report.mirror.faceShapeLabel;
   const line = report.mirror.lineTypeLabel;
   const hair = safeText(report.recommendation.hair, "얼굴선을 자연스럽게 감싸는 미디엄 길이를 기본으로 추천해요.");
+  const isMale = isMaleReport(report);
 
   const isRound = /라운드|둥근|원형/.test(shape);
   const isLong = /긴|장방|세로/.test(shape);
   const isSharp = /직선|선명|날카/.test(line);
+
+  if (isMale) {
+    if (isLong) {
+      return {
+        recommended: "옆 볼륨은 낮추고 앞머리는 가볍게 여는 미디엄 쇼트",
+        reason: `${hair} 세로감이 길게 읽히는 인상은 옆선보다 이마와 턱선 주변의 여백을 정돈할 때 훨씬 안정적으로 보입니다.`,
+        caution: "윗볼륨만 강하거나 얼굴을 길게 덮는 앞머리는 세로감을 더 키울 수 있어요.",
+        recommendedStyles: [
+          { title: "댄디 가르마", label: "추천", body: "이마를 일부 열어 답답함을 줄이고 정돈된 신뢰감을 살립니다.", tone: "charcoal" },
+          { title: "소프트 다운펌", label: "추천", body: "옆선 볼륨을 낮춰 얼굴 비율이 더 깔끔하게 정리됩니다.", tone: "sage" },
+          { title: "리프 컷 포인트", label: "주의", body: "앞머리 길이는 눈을 덮지 않는 선에서 가볍게 조절하는 편이 좋습니다.", tone: "sand" }
+        ],
+        avoidStyles: [
+          { title: "탑 볼륨 과다", label: "주의", body: "윗부분만 높으면 얼굴이 더 길게 보일 수 있습니다.", tone: "mute" },
+          { title: "긴 덮은 앞머리", label: "주의", body: "눈 주변이 가려져 장점보다 답답함이 먼저 보일 수 있습니다.", tone: "mute" }
+        ]
+      };
+    }
+
+    if (isRound) {
+      return {
+        recommended: "이마를 살짝 열어 세로선을 만드는 댄디 쇼트",
+        reason: `${hair} 둥근 여백은 얼굴을 덮기보다 가르마와 옆선 정돈으로 세로 흐름을 만들 때 더 선명하게 보입니다.`,
+        caution: "볼 주변을 둥글게 감싸는 무거운 앞머리와 옆볼륨은 얼굴 폭을 더 넓게 보이게 할 수 있어요.",
+        recommendedStyles: [
+          { title: "애즈펌", label: "추천", body: "앞머리를 자연스럽게 나눠 얼굴 중심을 길고 또렷하게 보여줍니다.", tone: "soft" },
+          { title: "아이비리그 컷", label: "추천", body: "깔끔한 라인으로 남성적인 단정함과 활동성을 함께 줍니다.", tone: "charcoal" },
+          { title: "다운펌 정돈", label: "포인트", body: "옆머리를 눌러 얼굴 주변 실루엣을 날렵하게 정리합니다.", tone: "sage" }
+        ],
+        avoidStyles: [
+          { title: "둥근 볼륨펌", label: "주의", body: "볼 옆에 부피가 생기면 인상이 둥글고 무거워질 수 있습니다.", tone: "mute" },
+          { title: "두꺼운 일자 앞머리", label: "비추천", body: "얼굴 중심이 닫혀 답답해 보이기 쉽습니다.", tone: "mute" }
+        ]
+      };
+    }
+
+    if (isSharp) {
+      return {
+        recommended: "결이 정돈된 가르마 컷 또는 소프트 크롭",
+        reason: `${hair} 선명한 인상은 헤어의 윤곽을 깔끔하게 잡고 질감을 과하게 흩뜨리지 않을 때 전문적으로 보입니다.`,
+        caution: "너무 거친 질감이나 강한 컬은 이미 가진 선명함을 과하게 보이게 만들 수 있어요.",
+        recommendedStyles: [
+          { title: "가르마 컷", label: "추천", body: "정돈된 선이 신뢰감과 세련미를 안정적으로 강화합니다.", tone: "charcoal" },
+          { title: "소프트 크롭", label: "추천", body: "짧지만 날카롭지 않게 정리해 깔끔한 인상을 만듭니다.", tone: "soft" },
+          { title: "내추럴 텍스처", label: "포인트", body: "제품은 매트하게, 결은 과하지 않게 살리는 편이 좋습니다.", tone: "sage" }
+        ],
+        avoidStyles: [
+          { title: "강한 스핀 컬", label: "주의", body: "얼굴보다 헤어 질감이 먼저 보여 인상이 산만해질 수 있습니다.", tone: "mute" },
+          { title: "과한 투블럭 대비", label: "주의", body: "옆선 대비가 강하면 차가운 느낌이 커질 수 있습니다.", tone: "mute" }
+        ]
+      };
+    }
+
+    return {
+      recommended: "정돈된 댄디 컷과 자연스러운 가르마",
+      reason: `${hair} 현재 분석값 기준으로 얼굴의 균형과 분위기를 가장 안정적으로 살리는 남성 헤어 방향입니다.`,
+      caution: "얼굴을 크게 덮는 앞머리보다 이마와 눈썹 주변을 살짝 열어주는 쪽이 더 깔끔합니다.",
+      recommendedStyles: [
+        { title: "댄디 컷", label: "추천", body: "부담 없이 단정하고, 대부분의 옷 스타일과 안정적으로 연결됩니다.", tone: "soft" },
+        { title: "가르마 펌", label: "추천", body: "정면 인상을 답답하지 않게 열어 세련된 분위기를 만듭니다.", tone: "charcoal" },
+        { title: "다운펌", label: "포인트", body: "옆머리 실루엣을 낮춰 전체 비율을 정돈합니다.", tone: "sage" }
+      ],
+      avoidStyles: [
+        { title: "무거운 덮은 앞머리", label: "주의", body: "눈매와 얼굴 중심이 가려져 인상이 답답해질 수 있습니다.", tone: "mute" },
+        { title: "과한 컬 볼륨", label: "주의", body: "헤어가 먼저 보이면 얼굴의 장점이 덜 읽힐 수 있습니다.", tone: "mute" }
+      ]
+    };
+  }
 
   if (isLong) {
     return {
@@ -411,6 +498,42 @@ function makeBangs(report: ReportData): FitCard[] {
   const clarity = clampPercent(report.mirror.scores.clarity);
   const hasCurve = /곡선|부드/.test(line);
   const hasStraight = /직선|선명|날카/.test(line);
+  const isMale = isMaleReport(report);
+
+  if (isMale) {
+    return [
+      {
+        title: "가르마 앞머리",
+        label: "추천",
+        score: 88,
+        body: "이마를 일부 열어 눈썹과 얼굴 중심이 보이게 하면 단정함과 세련미가 함께 살아납니다."
+      },
+      {
+        title: "댄디 프린지",
+        label: softness >= 60 ? "추천" : "주의",
+        score: softness >= 60 ? 84 : 68,
+        body: "앞머리를 가볍게 내려도 눈을 덮지 않는 길이를 유지하면 부드러움은 살고 답답함은 줄어듭니다."
+      },
+      {
+        title: "리프뱅",
+        label: clarity >= 70 ? "추천" : "주의",
+        score: clarity >= 70 ? 82 : 66,
+        body: "옆으로 흐르는 결이 얼굴선을 자연스럽게 정리하지만, 길이가 길면 눈매가 가려질 수 있어요."
+      },
+      {
+        title: "크롭 앞머리",
+        label: hasStraight ? "추천" : "주의",
+        score: hasStraight ? 80 : 64,
+        body: "짧고 깔끔한 앞머리는 선명한 인상을 정돈해 주며, 너무 짧게 자르면 강한 느낌이 커질 수 있습니다."
+      },
+      {
+        title: "이마 오픈",
+        label: "추천",
+        score: 86,
+        body: "중요한 자리에서는 이마와 눈썹 라인을 열어두면 신뢰감과 전문성이 더 잘 전달됩니다."
+      }
+    ];
+  }
 
   return [
     {
@@ -451,6 +574,30 @@ function makeBangs(report: ReportData): FitCard[] {
 function makeBaseMakeup(report: ReportData): FitCard[] {
   const clarity = clampPercent(report.mirror.scores.clarity);
   const softness = clampPercent(report.mirror.scores.softness);
+  const isMale = isMaleReport(report);
+
+  if (isMale) {
+    return [
+      {
+        title: "세미 매트 피부 정돈",
+        label: "추천",
+        score: 90,
+        body: `${safeText(report.color.undertone, "현재 톤")}이 탁해 보이지 않도록 유분은 낮추고 피부 결은 얇게 정돈하는 방향이 가장 안정적입니다.`
+      },
+      {
+        title: "눈썹 결 정리",
+        label: "추천",
+        score: clarity >= 70 ? 88 : 78,
+        body: "눈썹 아래 라인과 빈 곳만 정리하면 인상이 훨씬 또렷해지고, 과하게 꾸민 느낌 없이 신뢰감이 살아납니다."
+      },
+      {
+        title: "과한 윤광",
+        label: softness >= 80 ? "주의" : "비추천",
+        score: softness >= 80 ? 62 : 48,
+        body: "얼굴 전체가 번들거리면 구조감보다 유분감이 먼저 보일 수 있어 T존과 콧볼 주변은 매트하게 잡는 편이 좋습니다."
+      }
+    ];
+  }
 
   return [
     {
@@ -476,6 +623,7 @@ function makeBaseMakeup(report: ReportData): FitCard[] {
 
 function makeFeatureGuides(report: ReportData) {
   const clues = report.mirror.photoClues ?? [];
+  const isMale = isMaleReport(report);
   return [
     {
       title: "눈매",
@@ -487,7 +635,9 @@ function makeFeatureGuides(report: ReportData) {
     },
     {
       title: "입술",
-      body: `${safeText(report.recommendation.makeup, "추천 메이크업 방향")}에 맞춰 립은 얼굴빛과 연결되는 톤으로 선택하는 편이 좋습니다.`
+      body: isMale
+        ? "입술은 색을 크게 올리기보다 건조함과 각질을 정리해 얼굴빛이 피곤해 보이지 않게 만드는 편이 좋습니다."
+        : `${safeText(report.recommendation.makeup, "추천 메이크업 방향")}에 맞춰 립은 얼굴빛과 연결되는 톤으로 선택하는 편이 좋습니다.`
     },
     {
       title: "전체 조화감",
@@ -499,6 +649,33 @@ function makeFeatureGuides(report: ReportData) {
 function makeFashionMoods(report: ReportData) {
   const keywords = report.profile.keywords;
   const outfits = report.recommendation.outfitDetails ?? [];
+  const isMale = isMaleReport(report);
+
+  if (isMale) {
+    return [
+      {
+        name: "Clean Smart Casual",
+        reason: `${keywords[0] ?? "정돈된 이미지"}를 가장 쉽게 살리는 무드입니다. 셔츠와 슬랙스처럼 선이 깔끔한 아이템은 얼굴의 신뢰감을 바로 올려줍니다.`,
+        items: takeFilled(outfits, ["옥스포드 셔츠", "테이퍼드 슬랙스", "로퍼 또는 미니멀 스니커즈"], 3),
+        imageTitle: "셔츠와 슬랙스 중심의 스마트 캐주얼",
+        visualTone: "charcoal"
+      },
+      {
+        name: "Soft Minimal",
+        reason: "장식보다 소재와 핏을 먼저 보여주는 무드라서 과하게 꾸미지 않아도 세련된 인상이 남습니다.",
+        items: ["미니멀 니트", "뉴트럴 재킷", "클린 데님"],
+        imageTitle: "뉴트럴 니트와 단정한 재킷",
+        visualTone: "soft"
+      },
+      {
+        name: "Urban Classic",
+        reason: `${safeText(report.recommendation.profileMood, "정돈된 배경과 차분한 조명")}처럼 구조가 있는 연출에서 전문성과 존재감이 선명하게 읽힙니다.`,
+        items: ["블레이저", "레더 벨트", "메탈 시계"],
+        imageTitle: "블레이저와 클래식 액세서리",
+        visualTone: "sage"
+      }
+    ];
+  }
 
   return [
     {
@@ -588,11 +765,13 @@ export function normalizeReportData(report: ReportData): ReportPageModel {
   const topAnswers = getTopAnswers(answers);
   const clientName = safeText(report.intake?.nickname, "BOP Client");
   const keywords = takeFilled(report.profile.keywords, ["세련미", "균형감", "맑은 분위기", "기억되는 무드"], 4);
+  const isMaleStyling = isMaleReport(report);
   const hairLength = makeHairLength(report);
   const neckline = makeNeckline(report);
   const sections = makeSectionVisuals(report);
 
   return {
+    isMaleStyling,
     clientName,
     clientInitial: getInitial(clientName),
     createdLabel: formatDate(report.createdAt),
@@ -662,29 +841,52 @@ export function normalizeReportData(report: ReportData): ReportPageModel {
     features: makeFeatureGuides(report),
     hairLength,
     bangs: makeBangs(report),
-    hairAvoid: takeFilled(report.recommendation.avoidDetails, [
-      "과하게 무거운 앞머리는 얼굴 중심의 맑은 느낌을 줄일 수 있어요.",
-      "얼굴을 많이 가리는 스타일은 장점보다 답답함이 먼저 보일 수 있어요.",
-      "너무 강한 컬은 현재 분위기의 세련된 균형감을 흐릴 수 있어요."
-    ], 3).map((body, index) => ({
-      title: ["무거운 앞머리", "얼굴을 가리는 스타일", "강한 컬감"][index] ?? "줄이면 좋은 요소",
+    hairAvoid: takeFilled(report.recommendation.avoidDetails, isMaleStyling
+      ? [
+        "눈을 덮는 무거운 앞머리는 얼굴 중심의 또렷함을 줄일 수 있어요.",
+        "옆머리 볼륨이 크면 전체 실루엣이 둔해 보일 수 있어요.",
+        "너무 강한 컬은 단정한 신뢰감보다 헤어 질감이 먼저 보일 수 있어요."
+      ]
+      : [
+        "과하게 무거운 앞머리는 얼굴 중심의 맑은 느낌을 줄일 수 있어요.",
+        "얼굴을 많이 가리는 스타일은 장점보다 답답함이 먼저 보일 수 있어요.",
+        "너무 강한 컬은 현재 분위기의 세련된 균형감을 흐릴 수 있어요."
+      ], 3).map((body, index) => ({
+      title: (isMaleStyling
+        ? ["무거운 덮은 앞머리", "큰 옆머리 볼륨", "강한 컬감"]
+        : ["무거운 앞머리", "얼굴을 가리는 스타일", "강한 컬감"])[index] ?? "줄이면 좋은 요소",
       body
     })),
     baseMakeup: makeBaseMakeup(report),
-    eyeMakeup: [
-      {
-        title: "음영",
-        body: "눈두덩 전체를 진하게 덮기보다 베이스보다 한 톤 깊은 색을 얇게 쌓으면 눈매가 자연스럽게 또렷해집니다."
-      },
-      {
-        title: "아이라인",
-        body: "라인은 점막과 속눈썹 사이를 메우는 정도로 정리하고, 끝부분만 살짝 빼면 분위기가 과하지 않게 살아납니다."
-      },
-      {
-        title: "속눈썹",
-        body: "뿌리는 깔끔하게 올리고 끝은 뭉치지 않게 풀어주면 맑은 인상과 세련미가 함께 보입니다."
-      }
-    ],
+    eyeMakeup: isMaleStyling
+      ? [
+        {
+          title: "눈썹",
+          body: "눈썹 아래 잔털과 비어 보이는 부분만 정리하면 인상이 또렷해지고 과한 느낌 없이 신뢰감이 살아납니다."
+        },
+        {
+          title: "눈가 톤",
+          body: "눈 밑 그림자는 두껍게 가리기보다 얇게 톤만 맞추면 피곤해 보이는 인상이 줄어듭니다."
+        },
+        {
+          title: "피부 결",
+          body: "콧볼과 T존은 매트하게, 볼 쪽은 건조해 보이지 않게 정리하면 사진에서 훨씬 깔끔합니다."
+        }
+      ]
+      : [
+        {
+          title: "음영",
+          body: "눈두덩 전체를 진하게 덮기보다 베이스보다 한 톤 깊은 색을 얇게 쌓으면 눈매가 자연스럽게 또렷해집니다."
+        },
+        {
+          title: "아이라인",
+          body: "라인은 점막과 속눈썹 사이를 메우는 정도로 정리하고, 끝부분만 살짝 빼면 분위기가 과하지 않게 살아납니다."
+        },
+        {
+          title: "속눈썹",
+          body: "뿌리는 깔끔하게 올리고 끝은 뭉치지 않게 풀어주면 맑은 인상과 세련미가 함께 보입니다."
+        }
+      ],
     contour: [
       {
         title: "쉐딩",

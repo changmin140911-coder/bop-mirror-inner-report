@@ -32,7 +32,7 @@ export default function StartPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [nickname, setNickname] = useState("");
-  const [gender, setGender] = useState("여성");
+  const [gender, setGender] = useState("응답하지 않음");
   const [brandFocus, setBrandFocus] = useState("");
   const [consentToStore, setConsentToStore] = useState(true);
   const [selectedRobot, setSelectedRobot] = useState<AnalysisDepth>("standard");

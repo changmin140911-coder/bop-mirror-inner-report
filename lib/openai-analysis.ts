@@ -237,6 +237,21 @@ function getOpenAIClient() {
 
 function getAnalysisPrompt(payload: AnalysisPayload) {
   const robot = getRobotByDepth(payload.analysisDepth);
+  const isMaleContext = /남|male|man|men/i.test(payload.gender);
+  const genderRules = isMaleContext
+    ? `
+Gender styling rules:
+- The user selected a male styling context. Use men's image consulting language.
+- Do not recommend dresses, skirts, one-piece outfits, feminine bangs labels such as 시스루뱅, or women's makeup looks.
+- Use men's hair terms such as 가르마, 애즈펌, 댄디컷, 리프컷, 크롭컷, 다운펌, 자연스러운 앞머리, 이마를 여는 스타일.
+- Use men's grooming language: 피부 톤 정돈, 눈썹 결 정리, 입술 보습, 깔끔한 쉐이빙/수염 정리.
+- Use men's fashion items: 셔츠, 니트, 슬랙스, 데님, 블레이저, 코트, 로퍼, 스니커즈, 시계, 레더 벨트.`
+    : `
+Gender styling rules:
+- Use the selected gender or styling context from the user.
+- If the context is not clearly female, avoid overly feminine-only items and keep recommendations neutral or smart casual.
+- Do not force dresses, skirts, one-piece outfits, feminine bangs labels, or heavy makeup unless the user context clearly supports them.
+- If the visible photo and selected context point to a masculine presentation, use men's grooming, haircut, collar, smart casual, and tailoring language.`;
   const questionnaireSummary = payload.answers
     .map((answer) => `${answer.prompt}: ${answer.label}`)
     .join("\n");
@@ -250,7 +265,7 @@ Detail mode quality rules:
 - Give richer, more specific styling directions that feel personally selected.
 - Do not stop at labels. Explain "why this works" and "how to apply it tomorrow".
 - Build a high-end report that feels close to a 20-30 page expert PDF compressed into web sections.
-- Make the user feel "I want to book this" without using fear or heavy diagnostic wording.`
+- Make the report feel premium and specific without using booking pressure or heavy diagnostic wording.`
       : robot.id === "standard"
         ? `
 Standard mode quality rules:
@@ -272,11 +287,12 @@ Use the image itself carefully and specifically. Analyze visible visual signals 
 - visible skin undertone clues while clearly accounting for lighting uncertainty
 - styling mood that would harmonize with the user's actual photo
 Use the questionnaire only as self-reported preference and expression data.
-Keep the tone professional, aesthetic, warm, specific, and easy for women in their 20s to read.
+Keep the tone professional, aesthetic, warm, specific, and easy to read.
 Prefer natural Korean labels over English jargon. For example, do not use labels like "Structured Elegant" as the main persona name.
 Do not show heavy tool names to the user. Avoid visible words such as "에니어그램", "얼굴형", "심리", "진단", "문제", "결핍", "치료", "검사".
 Use softer user-facing words such as "마음 취향", "인상 밸런스", "분위기", "스타일 방향", "숨은 매력", "톤".
 Return valid JSON that matches the schema exactly.
+${genderRules}
 
 Brand focus:
 ${payload.brandFocus || "없음"}
@@ -309,11 +325,11 @@ Report rules:
 - color.textureWords must contain exactly 3 fabric or makeup texture words.
 - recommendation.avoidDetails must contain exactly 3 styling choices to reduce.
 - recommendation.shoppingKeywords must contain exactly 5 useful Korean shopping/search keywords.
-- recommendation.sessionHook must be one persuasive sentence that naturally makes the user want a deeper 1:1 styling session.
+- recommendation.sessionHook must be one concise next-step sentence about applying the style direction, without mentioning coaching, booking, counseling, or sessions.
 - If the selected robot is "quick", keep sentences shorter and more summary-like.
 - If the selected robot is "detail", add more nuanced visual branding language.
 - recommendation.moodboardPrompt should describe a premium editorial moodboard, not a transformed portrait of the uploaded user.
-- recommendation.moodboardPrompt should ask for stylish women-focused editorial references including outfit, makeup, and mood photography.
+- recommendation.moodboardPrompt should match the user's selected gender/styling context and include outfit, grooming or makeup, hair, and mood photography references.
 - security fields should explain consent-based storage and that this is branding guidance, not diagnosis.
 `.trim();
 }
@@ -399,6 +415,10 @@ function getConfiguredImageModel(robot: ReturnType<typeof getRobotByDepth>) {
   return perDepth || process.env.OPENAI_IMAGE_MODEL_OVERRIDE || robot.imageModel;
 }
 
+function getImageModelCandidates(primaryModel: string) {
+  return Array.from(new Set([primaryModel, "gpt-image-1", "gpt-image-1-mini"].filter(Boolean)));
+}
+
 function buildVisualRequests(report: ReportData): Array<{
   id: string;
   section: string;
@@ -409,23 +429,36 @@ function buildVisualRequests(report: ReportData): Array<{
 }> {
   const palette = report.color.palette.join(", ");
   const keywords = report.profile.keywords.join(", ");
+  const isMaleContext = /남|male|man|men/i.test(report.intake?.gender ?? "");
+  const audience = isMaleContext
+    ? "men's Korean personal styling"
+    : "gender-appropriate Korean personal styling";
+  const outfitGuard = isMaleContext
+    ? "Use men's clothing only: shirts, knitwear, slacks, denim, blazer, coat, loafers, sneakers, watch, leather belt. No dresses, skirts, one-piece outfits, feminine makeup, or women's bangs labels."
+    : "Use gender-appropriate clothing only. Avoid forcing dresses, skirts, one-piece outfits, or feminine-only styling unless the user context clearly supports it.";
+  const groomingGuard = isMaleContext
+    ? "Use men's grooming references: clean skin tone, eyebrow grooming, lip balm, shaving or beard line care, natural hair styling."
+    : "Use natural grooming or makeup references that match the user's context.";
 
   return [
     {
       id: "hairMakeup",
       section: "헤어와 메이크업",
       title: "추천 헤어와 메이크업 레퍼런스",
-      caption: "추천 헤어 길이, 앞머리, 피부 표현과 눈매 포인트를 한 장으로 정리한 AI 레퍼런스입니다.",
+      caption: isMaleContext
+        ? "추천 헤어 길이, 가르마, 피부 정돈과 그루밍 포인트를 한 장으로 정리한 AI 레퍼런스입니다."
+        : "추천 헤어 길이, 앞머리, 피부 표현과 눈매 포인트를 한 장으로 정리한 AI 레퍼런스입니다.",
       fallback: "makeup",
       prompt: `
-Create a premium Korean personal styling report reference board.
-Subject matter: women's hairstyle and makeup recommendations, not the uploaded person.
-Show 4 editorial tiles: recommended hair length, bangs direction, skin finish, eye makeup direction.
+Create a premium ${audience} report reference board.
+Subject matter: hairstyle and grooming recommendations, not the uploaded person.
+Show 4 editorial tiles: recommended hair length, front hair or parting direction, skin finish, grooming detail.
 Hair direction: ${report.recommendation.hair}.
-Makeup direction: ${report.recommendation.makeup}.
+Grooming or makeup direction: ${report.recommendation.makeup}.
 Color mood: ${report.color.seasonLabel}, ${report.color.undertone}, palette ${palette}.
 Style keywords: ${keywords}.
-Clean ivory report background, soft rose accent, realistic beauty reference photography, no text, no logos, no before-after transformation.
+${groomingGuard}
+Clean ivory report background, soft rose accent, realistic reference photography, no text, no logos, no before-after transformation.
 `.trim()
     },
     {
@@ -435,12 +468,13 @@ Clean ivory report background, soft rose accent, realistic beauty reference phot
       caption: "추천 무드와 의상 요소를 룩북처럼 보여주는 AI 스타일 카드입니다.",
       fallback: "moodboard",
       prompt: `
-Create a refined women's outfit lookbook moodboard for a Korean personal styling report.
-Show 3 outfit cards: soft minimal, clean feminine, natural elegant.
-Include tops, bottoms, dress or skirt, outerwear, bag, shoes, and accessories.
+Create a refined outfit lookbook moodboard for a ${audience} report.
+Show 3 outfit cards: soft minimal, clean smart, natural elegant.
+Include tops, bottoms, outerwear, bag, shoes, and accessories. Only include a dress or skirt when the user context is clearly female.
 Outfit guidance: ${(report.recommendation.outfitDetails ?? []).join(", ")}.
 Mood: ${report.recommendation.profileMood}.
 Color palette: ${palette}.
+${outfitGuard}
 Premium editorial layout, ivory paper, dusty rose accents, realistic fashion references, no text, no logos, do not depict the uploaded person.
 `.trim()
     },
@@ -459,6 +493,7 @@ Best tone: ${report.color.seasonLabel}, ${report.color.undertone}.
 Hair: ${report.recommendation.hair}.
 Makeup: ${report.recommendation.makeup}.
 Fashion mood: ${report.recommendation.profileMood}.
+${outfitGuard}
 Minimal luxury Korean styling PDF aesthetic, no text, no logos, no medical or psychological imagery, do not recreate the uploaded person.
 `.trim()
     }
@@ -471,56 +506,58 @@ async function generateVisualSlot(
   quality: "low" | "medium" | "high",
   request: ReturnType<typeof buildVisualRequests>[number]
 ): Promise<{ visual?: ReportVisualSlot; diagnostic: ImageGenerationDiagnostic }> {
-  try {
-    const result = await client.images.generate({
-      model,
-      prompt: request.prompt,
-      size: "1024x1024",
-      quality
-    });
-    const base64Image = result.data?.[0]?.b64_json;
+  let lastError = "";
 
-    if (!base64Image) {
+  for (const candidateModel of getImageModelCandidates(model)) {
+    try {
+      const result = await client.images.generate({
+        model: candidateModel,
+        prompt: request.prompt,
+        size: "1024x1024",
+        quality
+      });
+      const base64Image = result.data?.[0]?.b64_json;
+      const remoteUrl = result.data?.[0]?.url;
+      const imageUrl = base64Image ? `data:image/png;base64,${base64Image}` : remoteUrl;
+
+      if (!imageUrl) {
+        lastError = "이미지 API 응답에 b64_json 또는 url이 없습니다.";
+        continue;
+      }
+
       return {
+        visual: {
+          id: request.id,
+          section: request.section,
+          imageType: request.fallback,
+          imageTitle: request.title,
+          imagePrompt: request.prompt,
+          imageCaption: request.caption,
+          imageUrl,
+          generatedImageUrl: imageUrl,
+          fallbackType: request.fallback,
+          fallbackVisualType: request.fallback,
+          referenceImages: []
+        },
         diagnostic: {
           section: request.section,
-          ok: false,
-          model,
-          error: "이미지 API 응답에 b64_json이 없습니다."
+          ok: true,
+          model: candidateModel
         }
       };
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : "알 수 없는 이미지 생성 오류";
     }
-
-    return {
-      visual: {
-        id: request.id,
-        section: request.section,
-        imageType: request.fallback,
-        imageTitle: request.title,
-        imagePrompt: request.prompt,
-        imageCaption: request.caption,
-        imageUrl: `data:image/png;base64,${base64Image}`,
-        generatedImageUrl: `data:image/png;base64,${base64Image}`,
-        fallbackType: request.fallback,
-        fallbackVisualType: request.fallback,
-        referenceImages: []
-      },
-      diagnostic: {
-        section: request.section,
-        ok: true,
-        model
-      }
-    };
-  } catch (error) {
-    return {
-      diagnostic: {
-        section: request.section,
-        ok: false,
-        model,
-        error: error instanceof Error ? error.message : "알 수 없는 이미지 생성 오류"
-      }
-    };
   }
+
+  return {
+    diagnostic: {
+      section: request.section,
+      ok: false,
+      model: getImageModelCandidates(model).join(" -> "),
+      error: lastError || "이미지 생성 실패"
+    }
+  };
 }
 
 export async function analyzeWithOpenAI(payload: AnalysisPayload): Promise<AnalysisResponse> {

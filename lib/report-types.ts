@@ -57,7 +57,7 @@ export const analysisRobots: AnalysisRobot[] = [
     name: "눈썰미 최고",
     nickname: "고급 모델",
     icon: "eye",
-    model: "gpt-5.5",
+    model: "gpt-5.2",
     imageModel: "gpt-image-1.5",
     imageQuality: "high",
     pace: "가장 섬세함",
@@ -69,7 +69,7 @@ export const analysisRobots: AnalysisRobot[] = [
     name: "글 잘 쓰는",
     nickname: "일반 모델",
     icon: "pen",
-    model: "gpt-5.4-mini",
+    model: "gpt-5-mini",
     imageModel: "gpt-image-1",
     imageQuality: "medium",
     pace: "균형형",
@@ -81,7 +81,7 @@ export const analysisRobots: AnalysisRobot[] = [
     name: "핵심만 콕",
     nickname: "간단 모델",
     icon: "zap",
-    model: "gpt-5.4-nano",
+    model: "gpt-5-nano",
     imageModel: "gpt-image-1-mini",
     imageQuality: "low",
     pace: "가장 빠름",
@@ -562,9 +562,38 @@ export function buildFallbackReport(payload?: Partial<AnalysisPayload>): ReportD
       : "warm";
   const preset = fallbackPresets[presetKey];
   const robot = getRobotByDepth(payload?.analysisDepth);
+  const isMaleContext = /남|male|man|men/i.test(payload?.gender ?? "");
   const storageMode = payload?.consentToStore
     ? "동의된 리포트 데이터만 Firebase에 저장"
     : "업로드 이미지는 세션 처리 후 저장하지 않음";
+  const fallbackPersona = isMaleContext ? "정제된 신뢰감의 도시형 이미지" : preset.persona;
+  const fallbackSummary = isMaleContext ? "단정함과 세련된 균형감이 함께 읽히는 타입" : preset.summary;
+  const fallbackKeywords = isMaleContext
+    ? ["정돈된 신뢰감", "도시적 감각", "깔끔한 선", "차분한 존재감"]
+    : preset.keywords;
+  const fallbackHair = isMaleContext
+    ? "정돈된 댄디 컷과 자연스러운 가르마"
+    : preset.hair;
+  const fallbackMakeup = isMaleContext
+    ? "세미 매트 피부 정돈과 눈썹 결 정리"
+    : preset.makeup;
+  const fallbackProfileMood = isMaleContext
+    ? "차분한 뉴트럴 배경, 깔끔한 셔츠, 정돈된 스마트 캐주얼 무드"
+    : preset.profileMood;
+  const fallbackOutfitDetails = isMaleContext
+    ? [
+      `${preset.seasonLabel} 팔레트가 자연스럽게 이어지는 셔츠 컬러`,
+      "어깨와 목선을 정돈해 주는 재킷 또는 니트",
+      "시계, 벨트, 로퍼처럼 작은 면적의 클래식 포인트"
+    ]
+    : [
+      `${preset.seasonLabel} 팔레트가 자연스럽게 이어지는 상의 컬러`,
+      "목선과 어깨선을 정돈해 주는 깔끔한 실루엣",
+      "작지만 시선이 머무는 포인트 액세서리"
+    ];
+  const fallbackShoppingKeywords = isMaleContext
+    ? [`${preset.seasonLabel} 셔츠`, "미니멀 니트", "테이퍼드 슬랙스", "댄디 컷", "스마트 캐주얼"]
+    : [`${preset.seasonLabel} 블라우스`, "새틴 셔츠", "미니멀 재킷", "로즈 립", "프로필 촬영 무드"];
 
   return {
     source: "demo",
@@ -572,10 +601,10 @@ export function buildFallbackReport(payload?: Partial<AnalysisPayload>): ReportD
     robotName: robot.name,
     createdAt: new Date().toISOString(),
     profile: {
-      persona: preset.persona,
-      summary: preset.summary,
-      keywords: preset.keywords,
-      archetypeLine: preset.archetypeLine
+      persona: fallbackPersona,
+      summary: fallbackSummary,
+      keywords: fallbackKeywords,
+      archetypeLine: isMaleContext ? "과장 없이 단정하고 오래 신뢰가 남는 인상" : preset.archetypeLine
     },
     mirror: {
       faceShapeLabel: preset.faceShapeLabel,
@@ -624,22 +653,22 @@ export function buildFallbackReport(payload?: Partial<AnalysisPayload>): ReportD
       recommendation: preset.recommendation
     },
     recommendation: {
-      hair: preset.hair,
-      makeup: preset.makeup,
-      profileMood: preset.profileMood,
+      hair: fallbackHair,
+      makeup: fallbackMakeup,
+      profileMood: fallbackProfileMood,
       narrative: preset.narrative,
       moodboardPrompt:
-        "Luxury editorial branding moodboard, refined beauty direction, tactile neutrals, polished lighting, premium magazine composition",
+        isMaleContext
+          ? "Luxury Korean men's smart casual moodboard, clean grooming, haircut reference, neutral tailoring, polished lighting, premium magazine composition"
+          : "Luxury editorial branding moodboard, refined beauty direction, tactile neutrals, polished lighting, premium magazine composition",
       toneReason:
         "사진에서 읽히는 명도와 대비감을 기준으로 얼굴빛이 맑아 보이는 방향을 우선 추천합니다.",
       outfitDetails: [
-        `${preset.seasonLabel} 팔레트가 자연스럽게 이어지는 상의 컬러`,
-        "목선과 어깨선을 정돈해 주는 깔끔한 실루엣",
-        "작지만 시선이 머무는 포인트 액세서리"
+        ...fallbackOutfitDetails
       ],
       beautyDetails: [
-        preset.hair,
-        preset.makeup,
+        fallbackHair,
+        fallbackMakeup,
         "피부 결을 덮기보다 맑게 정리하는 베이스 표현"
       ],
       moodDetails: [
@@ -658,11 +687,7 @@ export function buildFallbackReport(payload?: Partial<AnalysisPayload>): ReportD
         "피부 결을 과하게 덮어 본래의 맑은 인상을 잃는 표현"
       ],
       shoppingKeywords: [
-        `${preset.seasonLabel} 블라우스`,
-        "새틴 셔츠",
-        "미니멀 재킷",
-        "로즈 립",
-        "프로필 촬영 무드"
+        ...fallbackShoppingKeywords
       ],
       sessionHook:
         "이 리포트의 방향을 실제 옷, 메이크업, 촬영 무드까지 맞추면 훨씬 빠르게 나만의 스타일 공식이 만들어집니다."

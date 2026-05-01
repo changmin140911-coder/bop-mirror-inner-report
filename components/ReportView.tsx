@@ -545,9 +545,11 @@ function HairBeautySection({ data }: { data: ReportPageModel }) {
   return (
     <ReportPage
       number="03"
-      kicker="Hair & Beauty"
-      title="헤어와 메이크업 추천"
-      subtitle="헤어 길이, 앞머리, 피부 표현, 눈매 포인트를 한 번에 적용하기 쉽게 정리했습니다."
+      kicker={data.isMaleStyling ? "Hair & Grooming" : "Hair & Beauty"}
+      title={data.isMaleStyling ? "헤어와 그루밍 추천" : "헤어와 메이크업 추천"}
+      subtitle={data.isMaleStyling
+        ? "헤어 길이, 가르마, 피부 정돈, 눈썹 포인트를 바로 적용하기 쉽게 정리했습니다."
+        : "헤어 길이, 앞머리, 피부 표현, 눈매 포인트를 한 번에 적용하기 쉽게 정리했습니다."}
     >
       <VisualFrame
         visual={data.visuals.sections.hairMakeup ?? data.visuals.sections.hairLength}
@@ -572,7 +574,7 @@ function HairBeautySection({ data }: { data: ReportPageModel }) {
 function FashionFinalSection({ report, data }: { report: ReportData; data: ReportPageModel }) {
   const summary = [
     { icon: Scissors, title: "Hair", body: data.finalSummary.hair },
-    { icon: Brush, title: "Makeup", body: data.finalSummary.makeup },
+    { icon: Brush, title: data.isMaleStyling ? "Grooming" : "Makeup", body: data.finalSummary.makeup },
     { icon: Shirt, title: "Fashion", body: data.finalSummary.fashion },
     { icon: Palette, title: "Color", body: data.finalSummary.color },
     { icon: Heart, title: "Image", body: data.finalSummary.image }
@@ -719,9 +721,11 @@ function BaseMakeupGuide({ data }: { data: ReportPageModel }) {
   return (
     <ReportPage
       number="09"
-      kicker="Base Makeup"
-      title="베이스 메이크업 가이드"
-      subtitle="피부 표현은 화려함보다 얼굴빛이 맑게 보이는 질감과 두께가 핵심입니다."
+      kicker={data.isMaleStyling ? "Skin & Grooming" : "Base Makeup"}
+      title={data.isMaleStyling ? "피부와 그루밍 가이드" : "베이스 메이크업 가이드"}
+      subtitle={data.isMaleStyling
+        ? "피부 표현은 꾸민 느낌보다 깨끗하게 정돈된 질감과 유분 조절이 핵심입니다."
+        : "피부 표현은 화려함보다 얼굴빛이 맑게 보이는 질감과 두께가 핵심입니다."}
     >
       <MakeupReferenceBoard data={data} mode="base" />
       <div className="pdfTagRow textureTags">
@@ -737,9 +741,11 @@ function EyeMakeupGuide({ data }: { data: ReportPageModel }) {
   return (
     <ReportPage
       number="10"
-      kicker="Eye Makeup"
-      title="아이 메이크업 가이드"
-      subtitle="눈매는 크게 바꾸기보다 선과 음영의 두께를 조절할 때 가장 자연스럽게 살아납니다."
+      kicker={data.isMaleStyling ? "Brow & Detail" : "Eye Makeup"}
+      title={data.isMaleStyling ? "눈썹과 인상 정돈" : "아이 메이크업 가이드"}
+      subtitle={data.isMaleStyling
+        ? "눈가와 눈썹은 크게 바꾸기보다 결을 정리할 때 가장 자연스럽게 또렷해집니다."
+        : "눈매는 크게 바꾸기보다 선과 음영의 두께를 조절할 때 가장 자연스럽게 살아납니다."}
     >
       <MakeupReferenceBoard data={data} mode="eye" />
       <div className="pdfCardGrid three">
@@ -837,7 +843,7 @@ function ColorPaletteGuide({ data, report }: { data: ReportPageModel; report: Re
 function FinalSummarySection({ data }: { data: ReportPageModel }) {
   const summary = [
     { icon: Scissors, title: "Hair", body: data.finalSummary.hair },
-    { icon: Brush, title: "Makeup", body: data.finalSummary.makeup },
+    { icon: Brush, title: data.isMaleStyling ? "Grooming" : "Makeup", body: data.finalSummary.makeup },
     { icon: Shirt, title: "Fashion", body: data.finalSummary.fashion },
     { icon: Palette, title: "Color", body: data.finalSummary.color },
     { icon: Heart, title: "Image", body: data.finalSummary.image }
