@@ -2,10 +2,8 @@
 
 import type { ReactNode } from "react";
 import {
-  ArrowRight,
   BadgeCheck,
   Brush,
-  Camera,
   Download,
   Eye,
   Heart,
@@ -16,7 +14,6 @@ import {
   Printer,
   Scissors,
   Shirt,
-  Sparkles,
   UserRound
 } from "lucide-react";
 import html2canvas from "html2canvas";
@@ -112,27 +109,6 @@ function SwatchRow({ colors, label }: { colors: string[]; label?: string }) {
   );
 }
 
-function FitCardGrid({ cards }: { cards: FitCard[] }) {
-  return (
-    <div className="fitCardGrid">
-      {cards.map((card) => (
-        <article className={`fitCard ${getFitClass(card.label)}`} key={card.title}>
-          <div className="fitCardTop">
-            <strong>{card.title}</strong>
-            <span>{card.label}</span>
-          </div>
-          {typeof card.score === "number" ? (
-            <div className="fitMeter" aria-label={`${card.title} 적합도 ${card.score}%`}>
-              <i style={{ width: `${card.score}%` }} />
-            </div>
-          ) : null}
-          <p>{card.body}</p>
-        </article>
-      ))}
-    </div>
-  );
-}
-
 function VisualFrame({
   visual,
   data,
@@ -224,6 +200,175 @@ function VisualPointCards({ items }: { items: { title: string; body: string }[] 
   );
 }
 
+function HairStyleBoard({ data }: { data: ReportPageModel }) {
+  return (
+    <div className="styleVisualBoard hairBoard">
+      {data.hairLength.recommendedStyles.map((style, index) => (
+        <article className={`visualResultCard ${style.tone ?? "soft"}`} key={style.title}>
+          <div className="hairThumb">
+            <i />
+            <b />
+          </div>
+          <span>{style.label}</span>
+          <h4>{style.title}</h4>
+          <p>{style.body}</p>
+          <small>Hair {String(index + 1).padStart(2, "0")}</small>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function HairAvoidBoard({ data }: { data: ReportPageModel }) {
+  return (
+    <div className="styleVisualBoard avoidBoard">
+      {data.hairLength.avoidStyles.map((style) => (
+        <article className="visualResultCard mute" key={style.title}>
+          <div className="hairThumb avoid">
+            <i />
+            <b />
+          </div>
+          <span>{style.label}</span>
+          <h4>{style.title}</h4>
+          <p>{style.body}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function BangsVisualCards({ data }: { data: ReportPageModel }) {
+  return (
+    <div className="bangsResultGrid">
+      {data.bangs.map((bang) => (
+        <article className={`bangsResultCard ${getFitClass(bang.label)}`} key={bang.title}>
+          <div className="bangsIllustration">
+            <i />
+            <b />
+            <em />
+          </div>
+          <div>
+            <span>{bang.label}</span>
+            <h4>{bang.title}</h4>
+            <p>{bang.body}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function MakeupReferenceBoard({ data, mode }: { data: ReportPageModel; mode: "base" | "eye" }) {
+  const cards = mode === "base"
+    ? data.baseMakeup.map((item) => ({
+        title: item.title,
+        label: item.label,
+        body: item.body
+      }))
+    : data.eyeMakeup.map((item) => ({
+        title: item.title,
+        label: "포인트",
+        body: item.body
+      }));
+
+  return (
+    <div className={`makeupReferenceBoard ${mode}`}>
+      {cards.slice(0, 3).map((card, index) => (
+        <article className="makeupReferenceCard" key={card.title}>
+          <div className="makeupThumb">
+            <i />
+            <b />
+            <em />
+          </div>
+          <span>{card.label}</span>
+          <h4>{card.title}</h4>
+          <p>{card.body}</p>
+          <small>{mode === "base" ? data.color.textures[index] ?? "texture" : `eye ${index + 1}`}</small>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function OutfitMoodCards({ data }: { data: ReportPageModel }) {
+  return (
+    <div className="outfitMoodGrid">
+      {data.fashionMoods.map((mood) => (
+        <article className={`outfitMoodCard ${mood.visualTone}`} key={mood.name}>
+          <div className="outfitIllustration">
+            <i className="top" />
+            <i className="bottom" />
+            <i className="bag" />
+            <i className="shoe" />
+          </div>
+          <span>{mood.name}</span>
+          <h4>{mood.imageTitle}</h4>
+          <p>{mood.reason}</p>
+          <div className="outfitItemRow">
+            {mood.items.map((item) => (
+              <b key={item}>{item}</b>
+            ))}
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function NecklineVisualCards({ data }: { data: ReportPageModel }) {
+  const recommended = data.neckline.recommended.map((item) => ({
+    title: item,
+    label: "추천"
+  }));
+  const avoid = data.neckline.avoid.map((item) => ({
+    title: item,
+    label: "주의"
+  }));
+
+  return (
+    <div className="necklineVisualGrid">
+      {[...recommended, ...avoid].slice(0, 5).map((item) => (
+        <article className={item.label === "추천" ? "best" : "care"} key={item.title}>
+          <div className="necklineThumb">
+            <i />
+            <b />
+          </div>
+          <span>{item.label}</span>
+          <h4>{item.title}</h4>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function ColorPaletteCards({ data }: { data: ReportPageModel }) {
+  const groups = [
+    { title: "Base Color", items: data.color.palettes.base },
+    { title: "Point Color", items: data.color.palettes.point },
+    { title: "Caution Color", items: data.color.palettes.avoid }
+  ];
+
+  return (
+    <div className="colorPaletteCards">
+      {groups.map((group) => (
+        <section key={group.title}>
+          <h4>{group.title}</h4>
+          <div>
+            {group.items.map((color) => (
+              <article key={`${group.title}-${color.hex}`}>
+                <i style={{ background: color.hex }} />
+                <strong>{color.name}</strong>
+                <span>{color.hex}</span>
+                <p>{color.description}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 function ReportCover({ report, data }: { report: ReportData; data: ReportPageModel }) {
   return (
     <section className="reportPage reportCover">
@@ -296,7 +441,7 @@ function ImageDiagnosisSection({ data, report }: { data: ReportPageModel; report
       subtitle={data.imageDiagnosis.impression}
     >
       <div className="diagnosisVisualLayout">
-        <VisualFrame visual={data.visuals.sections.diagnosis} data={data} title="User Image" />
+        <VisualFrame visual={data.visuals.sections.diagnosis} data={data} title="Mood Board" />
         <div>
           <h3>{report.profile.summary}</h3>
           <VisualPointCards
@@ -415,7 +560,7 @@ function HairLengthGuide({ data }: { data: ReportPageModel }) {
       subtitle="머리 길이는 얼굴형을 바꾸는 요소가 아니라, 얼굴 주변 여백을 어떻게 설계할지 정하는 요소입니다."
     >
       <div className="guideVisualSplit">
-        <VisualFrame visual={data.visuals.sections.hairLength} data={data} title="Hair Reference" />
+        <HairStyleBoard data={data} />
         <div className="heroGuideCard">
           <Scissors size={24} />
           <span>추천 길이</span>
@@ -439,8 +584,7 @@ function BangsGuide({ data }: { data: ReportPageModel }) {
       title="앞머리 적합도"
       subtitle="앞머리는 인상을 크게 바꾸는 요소라서, 어울림보다 먼저 답답함이 생기지 않는지를 확인하는 것이 중요합니다."
     >
-      <VisualFrame visual={data.visuals.sections.bangs} data={data} title="Bangs Visual Guide" />
-      <FitCardGrid cards={data.bangs} />
+      <BangsVisualCards data={data} />
     </ReportPage>
   );
 }
@@ -453,7 +597,7 @@ function HairAvoidGuide({ data }: { data: ReportPageModel }) {
       title="줄이면 좋은 헤어 방향"
       subtitle="어울리지 않는다는 뜻이 아니라, 현재 분위기를 더 잘 살리기 위해 강도를 조절하면 좋은 요소입니다."
     >
-      <VisualFrame visual={data.visuals.sections.hairAvoid} data={data} title="Avoid Hair Cards" />
+      <HairAvoidBoard data={data} />
       <div className="pdfCardGrid three">
         {data.hairAvoid.map((item) => (
           <SummaryCard key={item.title} title={item.title} body={item.body} />
@@ -471,8 +615,7 @@ function BaseMakeupGuide({ data }: { data: ReportPageModel }) {
       title="베이스 메이크업 가이드"
       subtitle="피부 표현은 화려함보다 얼굴빛이 맑게 보이는 질감과 두께가 핵심입니다."
     >
-      <VisualFrame visual={data.visuals.sections.baseMakeup} data={data} title="Base Texture" />
-      <FitCardGrid cards={data.baseMakeup} />
+      <MakeupReferenceBoard data={data} mode="base" />
       <div className="pdfTagRow textureTags">
         {data.color.textures.map((item) => (
           <span key={item}>{item}</span>
@@ -490,7 +633,7 @@ function EyeMakeupGuide({ data }: { data: ReportPageModel }) {
       title="아이 메이크업 가이드"
       subtitle="눈매는 크게 바꾸기보다 선과 음영의 두께를 조절할 때 가장 자연스럽게 살아납니다."
     >
-      <VisualFrame visual={data.visuals.sections.eyeMakeup} data={data} title="Eye Makeup Direction" />
+      <MakeupReferenceBoard data={data} mode="eye" />
       <div className="pdfCardGrid three">
         {data.eyeMakeup.map((item) => (
           <SummaryCard key={item.title} title={item.title} body={item.body} />
@@ -525,16 +668,10 @@ function FashionMoodSection({ report, data }: { report: ReportData; data: Report
       title="패션 무드 제안"
       subtitle="옷은 얼굴 분위기를 가리는 장식이 아니라, 첫인상이 더 쉽게 읽히도록 돕는 배경입니다."
     >
-      <VisualFrame visual={data.visuals.sections.fashionMood} data={data} title="Look Moodboard" />
-      <div className="moodGrid">
-        {data.fashionMoods.map((item) => (
-          <article className="moodCard" key={item.name}>
-            <span>{item.name}</span>
-            <p>{item.reason}</p>
-            <BulletList items={item.items} />
-          </article>
-        ))}
-      </div>
+      {report.generatedImage?.dataUrl ? (
+        <VisualFrame visual={data.visuals.sections.fashionMood} data={data} title="AI Moodboard" />
+      ) : null}
+      <OutfitMoodCards data={data} />
     </ReportPage>
   );
 }
@@ -547,7 +684,7 @@ function NecklineGuide({ data }: { data: ReportPageModel }) {
       title="넥라인 가이드"
       subtitle={data.neckline.reason}
     >
-      <VisualFrame visual={data.visuals.sections.neckline} data={data} title="Neckline Diagram" />
+      <NecklineVisualCards data={data} />
       <div className="twoColumnText">
         <div>
           <h3>어울리는 넥라인</h3>
@@ -570,7 +707,7 @@ function ColorPaletteGuide({ data, report }: { data: ReportPageModel; report: Re
       title="컬러 팔레트 가이드"
       subtitle={report.recommendation.toneReason ?? data.color.note}
     >
-      <VisualFrame visual={data.visuals.sections.color} data={data} title="Color Card" />
+      <ColorPaletteCards data={data} />
       <div className="colorHero">
         <div>
           <span>Best Tone</span>
@@ -636,7 +773,7 @@ function ExportSection({ report }: { report: ReportData }) {
         <h2>리포트를 저장하고 다음 단계로 이어가기</h2>
         <p>
           결과 이미지를 저장하거나 브라우저 인쇄 기능으로 PDF 저장을 할 수 있습니다.
-          더 구체적인 옷, 메이크업, 촬영 방향은 스타일 코칭 신청 페이지에서 이어갈 수 있어요.
+          이 페이지는 분석 결과와 추천 스타일을 확인하기 위한 전용 리포트입니다.
         </p>
       </div>
       <div className="reportActionGrid">
@@ -648,10 +785,6 @@ function ExportSection({ report }: { report: ReportData }) {
           <Printer size={18} />
           PDF로 저장하기
         </button>
-        <a className="secondaryButton" href="/apply">
-          <ArrowRight size={18} />
-          스타일 코칭 신청하기
-        </a>
         <a className="secondaryButton" href="/">
           <Home size={18} />
           처음으로 돌아가기

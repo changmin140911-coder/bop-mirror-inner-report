@@ -185,64 +185,6 @@ export async function listAdminReports(limit = 25) {
   });
 }
 
-export type CoachingApplicationInput = {
-  name: string;
-  age: string;
-  location: string;
-  phone: string;
-  helpTopic: string;
-  availableTime: string;
-  privacyAgreed: boolean;
-  pledgeAgreed: boolean;
-};
-
-export async function saveCoachingApplication(input: CoachingApplicationInput) {
-  const app = getFirebaseApp();
-  if (!app || !input.privacyAgreed || !input.pledgeAgreed) {
-    return null;
-  }
-
-  const db = getFirestore(app);
-  const docRef = await db.collection("coachingApplications").add({
-    ...input,
-    createdAt: FieldValue.serverTimestamp(),
-    source: "bop-web-apply"
-  });
-
-  return docRef.id;
-}
-
-export async function listCoachingApplications(limit = 25) {
-  const app = getFirebaseApp();
-  if (!app) {
-    return [];
-  }
-
-  const db = getFirestore(app);
-  const snapshot = await db
-    .collection("coachingApplications")
-    .orderBy("createdAt", "desc")
-    .limit(limit)
-    .get();
-
-  return snapshot.docs.map((doc) => {
-    const data = doc.data() as CoachingApplicationInput & {
-      createdAt?: { toDate?: () => Date };
-    };
-
-    return {
-      id: doc.id,
-      name: data.name ?? "",
-      age: data.age ?? "",
-      location: data.location ?? "",
-      phone: data.phone ?? "",
-      helpTopic: data.helpTopic ?? "",
-      availableTime: data.availableTime ?? "",
-      createdAt: data.createdAt?.toDate?.().toISOString() ?? ""
-    };
-  });
-}
-
 export async function listRecentReports(limit = 6): Promise<HistoryItem[]> {
   const app = getFirebaseApp();
   if (!app) {

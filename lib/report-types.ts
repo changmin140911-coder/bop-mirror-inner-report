@@ -23,9 +23,13 @@ export type AnalysisRobot = {
 export type ReportVisualSlot = {
   id: string;
   section: string;
+  imageType?: string;
+  imageTitle?: string;
   imagePrompt: string;
   imageCaption: string;
+  imageUrl?: string | null;
   generatedImageUrl?: string | null;
+  fallbackType?: string;
   fallbackVisualType:
     | "user-photo"
     | "moodboard"
@@ -164,9 +168,14 @@ export type ReportData = {
     heroImage?: string | null;
     referenceImages?: string[];
     sectionVisuals?: ReportVisualSlot[];
+    visuals?: ReportVisualSlot[];
     imagePrompt?: string;
+    imageType?: string;
+    imageTitle?: string;
     imageCaption?: string;
+    imageUrl?: string | null;
     generatedImageUrl?: string | null;
+    fallbackType?: string;
     fallbackVisualType?: ReportVisualSlot["fallbackVisualType"];
   };
 };

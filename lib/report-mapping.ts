@@ -9,6 +9,20 @@ export type FitCard = {
   score?: number;
 };
 
+export type VisualCard = {
+  title: string;
+  label: string;
+  body: string;
+  tone?: string;
+  items?: string[];
+};
+
+export type ColorToken = {
+  name: string;
+  hex: string;
+  description: string;
+};
+
 export type ReportPageModel = {
   clientName: string;
   clientInitial: string;
@@ -53,6 +67,8 @@ export type ReportPageModel = {
     recommended: string;
     reason: string;
     caution: string;
+    recommendedStyles: VisualCard[];
+    avoidStyles: VisualCard[];
   };
   bangs: FitCard[];
   hairAvoid: {
@@ -72,6 +88,8 @@ export type ReportPageModel = {
     name: string;
     reason: string;
     items: string[];
+    imageTitle: string;
+    visualTone: string;
   }[];
   neckline: {
     recommended: string[];
@@ -86,6 +104,11 @@ export type ReportPageModel = {
     bestUse: string[];
     textures: string[];
     note: string;
+    palettes: {
+      base: ColorToken[];
+      point: ColorToken[];
+      avoid: ColorToken[];
+    };
   };
   finalSummary: {
     hair: string;
@@ -194,16 +217,24 @@ function makeVisualSlot(
   return {
     id,
     section,
+    imageType: fallbackVisualType,
+    imageTitle: section,
     imagePrompt,
     imageCaption,
+    imageUrl: generatedImageUrl ?? null,
     generatedImageUrl: generatedImageUrl ?? null,
+    fallbackType: fallbackVisualType,
     fallbackVisualType,
     referenceImages: []
   };
 }
 
 function makeSectionVisuals(report: ReportData) {
-  const existing = new Map((report.visuals?.sectionVisuals ?? []).map((visual) => [visual.id, visual]));
+  const existingVisuals = [
+    ...(report.visuals?.sectionVisuals ?? []),
+    ...(report.visuals?.visuals ?? [])
+  ];
+  const existing = new Map(existingVisuals.map((visual) => [visual.id, visual]));
   const moodboard = report.generatedImage?.dataUrl ?? report.visuals?.generatedImageUrl ?? null;
   const persona = safeText(report.profile.persona, "개인 스타일링");
   const tone = safeText(report.color.seasonLabel, "추천 컬러");
@@ -222,9 +253,8 @@ function makeSectionVisuals(report: ReportData) {
       "diagnosis",
       "전체 이미지 진단",
       `Premium face image analysis board showing mood keywords: ${report.profile.keywords.join(", ")}.`,
-      "사진에서 읽힌 인상과 분위기 포인트",
-      "user-photo",
-      report.visuals?.sourceUserImage ?? null
+      "분석 결과를 요약한 분위기 보드",
+      "diagram"
     ),
     makeVisualSlot(
       "hairLength",
@@ -287,7 +317,7 @@ function makeSectionVisuals(report: ReportData) {
       "summary",
       "최종 요약",
       `Final personal styling summary board using user's photo, ${persona}, hair, makeup, fashion and color.`,
-      "최종 스타일링 요약 이미지",
+      "기준 이미지와 추천 공식을 함께 정리한 최종 보드",
       "summary",
       report.visuals?.sourceUserImage ?? null
     )
@@ -309,7 +339,16 @@ function makeHairLength(report: ReportData) {
     return {
       recommended: "쇄골선에서 가슴 위로 이어지는 미디엄 길이",
       reason: `${hair} 세로감이 길게 이어지는 인상은 옆 볼륨과 레이어가 더해질 때 얼굴의 여백이 부드럽게 정리됩니다.`,
-      caution: "턱 아래로 곧게 떨어지는 아주 긴 생머리는 세로감을 더 강조할 수 있어요."
+      caution: "턱 아래로 곧게 떨어지는 아주 긴 생머리는 세로감을 더 강조할 수 있어요.",
+      recommendedStyles: [
+        { title: "미디엄 레이어드", label: "추천", body: "옆 볼륨과 턱선 아래 흐름을 만들어 세로감을 부드럽게 나눕니다.", tone: "soft" },
+        { title: "페이스 라인 컷", label: "추천", body: "얼굴 주변에 가벼운 층을 두어 시선을 중앙으로 모아줍니다.", tone: "rose" },
+        { title: "내추럴 웨이브", label: "포인트", body: "강한 컬보다 큰 흐름의 웨이브가 분위기를 편안하게 만듭니다.", tone: "sage" }
+      ],
+      avoidStyles: [
+        { title: "일자 장발", label: "주의", body: "세로선을 더 길게 보여 얼굴 여백이 커 보일 수 있습니다.", tone: "mute" },
+        { title: "탑 볼륨 과다", label: "주의", body: "윗부분만 높아지면 비율이 위로 길어 보입니다.", tone: "mute" }
+      ]
     };
   }
 
@@ -317,7 +356,16 @@ function makeHairLength(report: ReportData) {
     return {
       recommended: "턱선을 살짝 지나 어깨에 닿는 레이어드 길이",
       reason: `${hair} 얼굴선을 모두 가리기보다 바깥 윤곽을 세로로 열어주면 맑고 세련된 느낌이 살아납니다.`,
-      caution: "볼 주변에만 짧고 무거운 볼륨이 모이면 인상이 답답해 보일 수 있어요."
+      caution: "볼 주변에만 짧고 무거운 볼륨이 모이면 인상이 답답해 보일 수 있어요.",
+      recommendedStyles: [
+        { title: "중단발 레이어드", label: "추천", body: "턱선 아래로 시선을 내려 얼굴 주변을 가볍게 정리합니다.", tone: "sage" },
+        { title: "사이드 볼륨", label: "추천", body: "정면을 가리지 않고 옆선에 흐름을 만들어 인상을 맑게 엽니다.", tone: "rose" },
+        { title: "노뱅 미디엄", label: "포인트", body: "이마와 중심을 열어 얼굴빛과 컬러 포인트가 잘 보입니다.", tone: "sky" }
+      ],
+      avoidStyles: [
+        { title: "볼 주변 무거운 컬", label: "주의", body: "얼굴 폭이 더 답답하게 보일 수 있습니다.", tone: "mute" },
+        { title: "두꺼운 턱선 단발", label: "주의", body: "시선이 볼과 턱에 머물러 전체가 무거워 보입니다.", tone: "mute" }
+      ]
     };
   }
 
@@ -325,14 +373,32 @@ function makeHairLength(report: ReportData) {
     return {
       recommended: "결이 정돈된 미디엄 롱 또는 세미 롱",
       reason: `${hair} 선명한 선감은 깔끔한 길이와 은은한 결 표현을 만났을 때 더 고급스럽게 보입니다.`,
-      caution: "너무 짧고 강한 층은 이미 가진 선명함을 과하게 보이게 만들 수 있어요."
+      caution: "너무 짧고 강한 층은 이미 가진 선명함을 과하게 보이게 만들 수 있어요.",
+      recommendedStyles: [
+        { title: "미디엄 롱 스트레이트", label: "추천", body: "정돈된 결이 선명한 인상을 고급스럽게 보여줍니다.", tone: "charcoal" },
+        { title: "소프트 C컬", label: "추천", body: "끝선만 둥글게 정리해 차가운 느낌을 낮춰줍니다.", tone: "rose" },
+        { title: "사이드 파트", label: "포인트", body: "직선적인 분위기에 여백과 입체감을 더합니다.", tone: "sage" }
+      ],
+      avoidStyles: [
+        { title: "짧은 샤기 레이어", label: "주의", body: "선이 과하게 분산되어 인상이 날카로워질 수 있습니다.", tone: "mute" },
+        { title: "강한 히피펌", label: "주의", body: "얼굴의 정돈된 분위기보다 컬이 먼저 보일 수 있습니다.", tone: "mute" }
+      ]
     };
   }
 
   return {
     recommended: "어깨선 전후의 미디엄 레이어드",
     reason: `${hair} 현재 분석값 기준으로 얼굴형과 분위기 모두를 안정적으로 살리는 길이입니다.`,
-    caution: "얼굴을 많이 덮는 무거운 기장보다 목선과 턱선을 살짝 열어주는 쪽이 좋습니다."
+    caution: "얼굴을 많이 덮는 무거운 기장보다 목선과 턱선을 살짝 열어주는 쪽이 좋습니다.",
+    recommendedStyles: [
+      { title: "미디엄 레이어드", label: "추천", body: "얼굴선과 목선을 동시에 정리하는 안정적인 길이입니다.", tone: "sage" },
+      { title: "자연 웨이브", label: "추천", body: "부드러운 움직임을 만들어 분위기를 더 여성스럽게 보여줍니다.", tone: "rose" },
+      { title: "가벼운 사이드뱅", label: "포인트", body: "얼굴을 가리지 않고 시선을 사선으로 정리합니다.", tone: "sky" }
+    ],
+    avoidStyles: [
+      { title: "무거운 풀뱅", label: "주의", body: "중심이 닫혀 전체 이미지가 답답해질 수 있습니다.", tone: "mute" },
+      { title: "과한 컬 볼륨", label: "주의", body: "얼굴보다 헤어가 먼저 보일 수 있어 강도 조절이 필요합니다.", tone: "mute" }
+    ]
   };
 }
 
@@ -435,19 +501,55 @@ function makeFashionMoods(report: ReportData) {
     {
       name: "Soft Minimal",
       reason: `${keywords[0] ?? "정돈된 이미지"}를 가장 쉽게 살리는 무드입니다. 장식보다 소재와 핏을 먼저 보여주기 때문에 얼굴의 분위기가 깨끗하게 올라옵니다.`,
-      items: takeFilled(outfits, ["크림 또는 그레이 톤 니트", "미니멀 재킷", "작은 이어링"], 3)
+      items: takeFilled(outfits, ["크림 또는 그레이 톤 니트", "미니멀 재킷", "작은 이어링"], 3),
+      imageTitle: "톤온톤 니트와 미니멀 재킷",
+      visualTone: "soft"
     },
     {
       name: "Clean Feminine",
       reason: "부드러운 색감과 단정한 실루엣을 함께 쓰면 여성스러운 분위기가 과하지 않고 세련되게 정리됩니다.",
-      items: ["새틴 블라우스", "미디 스커트", "로즈 또는 뮤트 톤 립"]
+      items: ["새틴 블라우스", "미디 스커트", "로즈 또는 뮤트 톤 립"],
+      imageTitle: "새틴 블라우스와 미디 스커트",
+      visualTone: "rose"
     },
     {
       name: "Natural Elegant",
       reason: `${safeText(report.recommendation.profileMood, "자연광과 단정한 배경")}처럼 힘을 뺀 연출에서 고급스러운 인상이 오래 남습니다.`,
-      items: ["톤온톤 셋업", "얇은 니트", "낮은 채도의 포인트 백"]
+      items: ["톤온톤 셋업", "얇은 니트", "낮은 채도의 포인트 백"],
+      imageTitle: "뉴트럴 셋업과 포인트 백",
+      visualTone: "sand"
     }
   ];
+}
+
+function makeColorToken(hex: string, index: number, type: "base" | "point" | "avoid"): ColorToken {
+  const baseNames = ["페이스 라이트", "소프트 뉴트럴", "무드 베이지", "클린 그레이", "딥 포커스", "새틴 브라운"];
+  const pointNames = ["립 포인트", "블러셔 포인트", "액세서리 포인트", "촬영 배경 포인트"];
+  const avoidNames = ["탁한 오렌지", "무거운 브라운", "강한 네온", "잿빛 카키"];
+  const names = type === "base" ? baseNames : type === "point" ? pointNames : avoidNames;
+  const descriptions = {
+    base: "얼굴 가까이에 넓게 써도 분위기를 안정적으로 받쳐주는 색입니다.",
+    point: "립, 블러셔, 작은 액세서리처럼 작은 면적에 쓰면 인상이 살아납니다.",
+    avoid: "얼굴 가까이에 넓게 쓰면 톤이 무거워 보일 수 있어 면적을 줄이는 편이 좋습니다."
+  };
+
+  return {
+    name: names[index] ?? `${type} color`,
+    hex,
+    description: descriptions[type]
+  };
+}
+
+function makeColorPalettes(report: ReportData) {
+  const palette = takeFilled(report.color.palette, ["#f3ebe5", "#d8b9b2", "#b98f8a", "#6b5a52"], 6);
+  const pointFallback = [palette[1], palette[2], "#c77d84", "#b9d6cb"];
+  const avoid = takeFilled(report.color.avoid, ["#bb6725", "#80501c", "#5f6f3d", "#2f3d8f"], 4);
+
+  return {
+    base: takeFilled(palette, ["#f3ebe5", "#ded2c8"], 6).map((hex, index) => makeColorToken(hex, index, "base")),
+    point: takeFilled(pointFallback, ["#c77d84", "#b9d6cb"], 4).map((hex, index) => makeColorToken(hex, index, "point")),
+    avoid: avoid.map((hex, index) => makeColorToken(hex, index, "avoid"))
+  };
 }
 
 function makeNeckline(report: ReportData) {
@@ -607,7 +709,8 @@ export function normalizeReportData(report: ReportData): ReportPageModel {
         "촬영 배경은 팔레트보다 한 톤 낮게 선택"
       ], 3),
       textures: takeFilled(report.color.textureWords, ["새틴", "소프트 매트", "맑은 윤광"], 3),
-      note: safeText(report.color.note)
+      note: safeText(report.color.note),
+      palettes: makeColorPalettes(report)
     },
     finalSummary: {
       hair: hairLength.recommended,
