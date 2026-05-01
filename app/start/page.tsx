@@ -74,6 +74,34 @@ export default function StartPage() {
     });
   }
 
+  async function createReportThumbnail(file: File) {
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const nextImage = new Image();
+      nextImage.onload = () => resolve(nextImage);
+      nextImage.onerror = reject;
+      nextImage.src = dataUrl;
+    });
+
+    const maxSide = 980;
+    const ratio = Math.min(1, maxSide / Math.max(image.width, image.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.width * ratio));
+    canvas.height = Math.max(1, Math.round(image.height * ratio));
+
+    const context = canvas.getContext("2d");
+    if (!context) return dataUrl;
+
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.76);
+  }
+
   function submitAnalysis() {
     if (!selectedFile) {
       setErrorMessage("분석을 시작하려면 얼굴 사진을 먼저 업로드해 주세요.");
@@ -106,7 +134,18 @@ export default function StartPage() {
         }
 
         const reportId = data.report.id ?? `local-${Date.now()}`;
-        window.localStorage.setItem(`bop-report-${reportId}`, JSON.stringify(data.report));
+        const sourceUserImage = await createReportThumbnail(selectedFile);
+        const reportWithVisuals = {
+          ...data.report,
+          visuals: {
+            ...(data.report.visuals ?? {}),
+            sourceUserImage,
+            heroImage: sourceUserImage,
+            imageCaption: "분석에 사용된 대표 얼굴 이미지입니다.",
+            fallbackVisualType: "user-photo" as const
+          }
+        };
+        window.localStorage.setItem(`bop-report-${reportId}`, JSON.stringify(reportWithVisuals));
         router.push(`/report/${reportId}`);
       } catch (error) {
         setIsAnalyzing(false);

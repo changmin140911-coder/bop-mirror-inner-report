@@ -1343,6 +1343,24 @@ label {
   margin-bottom: 0;
 }
 
+.coverVisualCard {
+  gap: 18px;
+  justify-items: stretch;
+  padding: 16px;
+  text-align: left;
+}
+
+.coverVisualCard img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.coverVisualCard > div:not(.initialSeal) {
+  padding: 0 6px 6px;
+}
+
 .coverBottom {
   align-items: end;
   border-top: 1px solid rgba(82, 63, 56, 0.14);
@@ -1438,6 +1456,249 @@ label {
   margin: 0;
   color: var(--muted);
   line-height: 1.75;
+}
+
+.diagnosisVisualLayout,
+.guideVisualSplit,
+.summaryVisualSplit {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+  gap: 18px;
+  align-items: stretch;
+  margin-bottom: 20px;
+}
+
+.visualFrame {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border: 1px solid rgba(82, 63, 56, 0.12);
+  border-radius: 8px;
+  display: grid;
+  gap: 0;
+  margin: 0 0 18px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.62), rgba(246, 235, 228, 0.62)),
+    var(--ivory);
+}
+
+.diagnosisVisualLayout .visualFrame,
+.guideVisualSplit .visualFrame,
+.summaryVisualSplit .visualFrame {
+  margin-bottom: 0;
+}
+
+.visualFrame img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+.visualFrame.moodboard img {
+  aspect-ratio: 16 / 9;
+}
+
+.visualFrame figcaption {
+  padding: 12px 14px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.visualFallback {
+  min-height: 260px;
+  padding: 16px;
+}
+
+.visualFallbackHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.visualFallbackHeader span {
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.visualFallbackHeader small {
+  color: var(--rose);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.visualPrompt {
+  border-top: 1px solid rgba(82, 63, 56, 0.1);
+  margin: 0;
+  padding: 10px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.visualPaletteBoard {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  min-height: 150px;
+}
+
+.visualPaletteBoard i {
+  border: 1px solid rgba(82, 63, 56, 0.14);
+  border-radius: 8px;
+}
+
+.necklineDiagramSet,
+.bangsVisualSet,
+.makeupVisualSet,
+.hairVisualSet,
+.moodVisualSet {
+  display: grid;
+  gap: 10px;
+  min-height: 170px;
+  align-content: center;
+}
+
+.necklineDiagramSet,
+.bangsVisualSet {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.bangsVisualSet {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.necklineDiagramSet div,
+.bangsVisualSet div {
+  min-height: 128px;
+  border: 1px solid rgba(82, 63, 56, 0.11);
+  border-radius: 8px;
+  display: grid;
+  align-content: end;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+.necklineDiagramSet b,
+.bangsVisualSet b {
+  width: 58px;
+  height: 58px;
+  border: 2px solid rgba(199, 125, 132, 0.48);
+  border-top: 0;
+  border-radius: 0 0 44px 44px;
+  justify-self: center;
+}
+
+.bangsVisualSet b {
+  border: 2px solid rgba(82, 63, 56, 0.18);
+  border-bottom-color: rgba(199, 125, 132, 0.52);
+  border-radius: 44px 44px 30px 30px;
+}
+
+.bangsVisualSet .active {
+  background: rgba(185, 214, 203, 0.26);
+}
+
+.necklineDiagramSet span,
+.bangsVisualSet span,
+.hairVisualSet span,
+.makeupVisualSet span,
+.moodVisualSet span {
+  color: var(--ink);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.makeupVisualSet {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.makeupVisualSet i {
+  min-height: 128px;
+  border-radius: 999px 999px 8px 8px;
+  background: linear-gradient(180deg, rgba(240, 201, 203, 0.68), rgba(255, 253, 249, 0.88));
+}
+
+.makeupVisualSet i:nth-child(2) {
+  background: linear-gradient(180deg, rgba(185, 214, 203, 0.62), rgba(255, 253, 249, 0.88));
+}
+
+.makeupVisualSet i:nth-child(3) {
+  background: linear-gradient(180deg, rgba(191, 212, 223, 0.62), rgba(255, 253, 249, 0.88));
+}
+
+.makeupVisualSet span {
+  grid-column: 1 / -1;
+  text-align: center;
+}
+
+.hairVisualSet {
+  justify-items: center;
+  text-align: center;
+}
+
+.hairVisualSet i {
+  width: 128px;
+  height: 162px;
+  border-radius: 70px 70px 46px 46px;
+  background: linear-gradient(180deg, rgba(72, 56, 51, 0.82), rgba(190, 149, 138, 0.5));
+}
+
+.hairVisualSet b {
+  width: 86px;
+  height: 1px;
+  background: rgba(199, 125, 132, 0.45);
+}
+
+.moodVisualSet {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.moodVisualSet span {
+  min-height: 82px;
+  border: 1px solid rgba(82, 63, 56, 0.11);
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+.visualPointCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.visualPointCards article {
+  border: 1px solid rgba(82, 63, 56, 0.12);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.54);
+}
+
+.visualPointCards span {
+  color: var(--rose);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.visualPointCards p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
 }
 
 .diagnosisLayout {
@@ -2121,6 +2382,9 @@ label {
   .applyLayout,
   .coverGrid,
   .diagnosisLayout,
+  .diagnosisVisualLayout,
+  .guideVisualSplit,
+  .summaryVisualSplit,
   .colorHero,
   .exportPage {
     grid-template-columns: 1fr;
@@ -2153,7 +2417,8 @@ label {
   .pdfCardGrid.three,
   .balanceGrid,
   .moodGrid,
-  .summaryMatrix {
+  .summaryMatrix,
+  .visualPointCards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -2246,8 +2511,17 @@ label {
   .fitCardGrid,
   .moodGrid,
   .summaryMatrix,
-  .pdfSwatchRow {
+  .pdfSwatchRow,
+  .visualPointCards,
+  .necklineDiagramSet,
+  .bangsVisualSet,
+  .makeupVisualSet,
+  .moodVisualSet {
     grid-template-columns: 1fr;
+  }
+
+  .visualFallback {
+    min-height: 220px;
   }
 
   .proportionBoard {

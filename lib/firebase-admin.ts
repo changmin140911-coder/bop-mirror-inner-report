@@ -84,12 +84,23 @@ export async function saveReportToFirebase(
     return null;
   }
 
+  const storedReport: ReportData = {
+    ...report,
+    visuals: report.visuals
+      ? {
+          ...report.visuals,
+          sourceUserImage: null,
+          heroImage: null
+        }
+      : undefined
+  };
+
   await db.collection("mirrorReports").doc(docId).set({
     nickname: payload.nickname || null,
     gender: payload.gender || null,
     brandFocus: payload.brandFocus || null,
     answers: payload.answers,
-    report,
+    report: storedReport,
     source: report.source ?? "demo",
     generatedImageStored: diagnostics.generatedImageStored,
     createdAt: FieldValue.serverTimestamp()

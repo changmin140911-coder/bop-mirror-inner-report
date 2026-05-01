@@ -20,6 +20,26 @@ export type AnalysisRobot = {
   promise: string;
 };
 
+export type ReportVisualSlot = {
+  id: string;
+  section: string;
+  imagePrompt: string;
+  imageCaption: string;
+  generatedImageUrl?: string | null;
+  fallbackVisualType:
+    | "user-photo"
+    | "moodboard"
+    | "hair"
+    | "bangs"
+    | "makeup"
+    | "eye"
+    | "neckline"
+    | "palette"
+    | "summary"
+    | "diagram";
+  referenceImages?: string[];
+};
+
 export const analysisRobots: AnalysisRobot[] = [
   {
     id: "detail",
@@ -138,6 +158,16 @@ export type ReportData = {
     alt: string;
     dataUrl?: string | null;
     storagePath?: string | null;
+  };
+  visuals?: {
+    sourceUserImage?: string | null;
+    heroImage?: string | null;
+    referenceImages?: string[];
+    sectionVisuals?: ReportVisualSlot[];
+    imagePrompt?: string;
+    imageCaption?: string;
+    generatedImageUrl?: string | null;
+    fallbackVisualType?: ReportVisualSlot["fallbackVisualType"];
   };
 };
 

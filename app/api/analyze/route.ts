@@ -77,6 +77,13 @@ export async function POST(request: Request) {
     consentToStore,
     answers
   };
+  analysis.report.visuals = {
+    ...(analysis.report.visuals ?? {}),
+    generatedImageUrl: analysis.report.generatedImage?.dataUrl ?? null,
+    imagePrompt: analysis.report.recommendation.moodboardPrompt,
+    imageCaption: "분석에 사용된 대표 이미지와 추천 무드를 함께 정리한 리포트입니다.",
+    fallbackVisualType: "moodboard"
+  };
 
   let generatedImageStored = false;
   if (analysis.report.generatedImage?.dataUrl && isFirebaseConfigured()) {

@@ -1,4 +1,4 @@
-import type { QuestionnaireAnswer, ReportData } from "@/lib/report-types";
+import type { QuestionnaireAnswer, ReportData, ReportVisualSlot } from "@/lib/report-types";
 
 type ToneLevel = "추천" | "주의" | "비추천";
 
@@ -15,6 +15,12 @@ export type ReportPageModel = {
   createdLabel: string;
   keywords: string[];
   summarySentence: string;
+  visuals: {
+    sourceUserImage?: string | null;
+    heroImage?: string | null;
+    moodboardImage?: string | null;
+    sections: Record<string, ReportVisualSlot>;
+  };
   overview: {
     title: string;
     body: string;
@@ -175,6 +181,119 @@ function pickAnswerLabels(answers: QuestionnaireAnswer[] | undefined, ids: strin
     .map((id) => byId.get(id))
     .filter(Boolean)
     .map((answer) => `${answer!.prompt} ${answer!.label}`);
+}
+
+function makeVisualSlot(
+  id: string,
+  section: string,
+  imagePrompt: string,
+  imageCaption: string,
+  fallbackVisualType: ReportVisualSlot["fallbackVisualType"],
+  generatedImageUrl?: string | null
+): ReportVisualSlot {
+  return {
+    id,
+    section,
+    imagePrompt,
+    imageCaption,
+    generatedImageUrl: generatedImageUrl ?? null,
+    fallbackVisualType,
+    referenceImages: []
+  };
+}
+
+function makeSectionVisuals(report: ReportData) {
+  const existing = new Map((report.visuals?.sectionVisuals ?? []).map((visual) => [visual.id, visual]));
+  const moodboard = report.generatedImage?.dataUrl ?? report.visuals?.generatedImageUrl ?? null;
+  const persona = safeText(report.profile.persona, "개인 스타일링");
+  const tone = safeText(report.color.seasonLabel, "추천 컬러");
+  const hair = safeText(report.recommendation.hair, "추천 헤어");
+
+  const defaults = [
+    makeVisualSlot(
+      "cover",
+      "커버",
+      `Use the user's representative analysis photo with ${persona} editorial styling keywords.`,
+      "분석에 사용된 대표 이미지",
+      "user-photo",
+      report.visuals?.heroImage ?? report.visuals?.sourceUserImage ?? null
+    ),
+    makeVisualSlot(
+      "diagnosis",
+      "전체 이미지 진단",
+      `Premium face image analysis board showing mood keywords: ${report.profile.keywords.join(", ")}.`,
+      "사진에서 읽힌 인상과 분위기 포인트",
+      "user-photo",
+      report.visuals?.sourceUserImage ?? null
+    ),
+    makeVisualSlot(
+      "hairLength",
+      "헤어 길이 가이드",
+      `Korean women's hair reference board for ${hair}, premium salon report style.`,
+      "추천 헤어 길이 예시",
+      "hair"
+    ),
+    makeVisualSlot(
+      "bangs",
+      "앞머리 가이드",
+      "Visual comparison cards for see-through bangs, side bangs, curtain bangs, full bangs, no bangs.",
+      "앞머리 유형별 적합도 카드",
+      "bangs"
+    ),
+    makeVisualSlot(
+      "hairAvoid",
+      "헤어 비추천 가이드",
+      "Small thumbnail cards showing heavy bangs, face-covering hair, and overly strong curls as avoid examples.",
+      "강도를 줄이면 좋은 헤어 요소",
+      "hair"
+    ),
+    makeVisualSlot(
+      "baseMakeup",
+      "베이스 메이크업",
+      `Skin finish mood reference for ${tone}, semi-glow, soft matte, clean base.`,
+      "피부 표현 질감 예시",
+      "makeup"
+    ),
+    makeVisualSlot(
+      "eyeMakeup",
+      "아이 메이크업",
+      "Soft Korean eye makeup direction with natural shadow, thin eyeliner, clean lashes.",
+      "눈매를 살리는 메이크업 방향",
+      "eye"
+    ),
+    makeVisualSlot(
+      "fashionMood",
+      "패션 무드",
+      report.recommendation.moodboardPrompt,
+      "AI 추천 스타일 무드보드",
+      "moodboard",
+      moodboard
+    ),
+    makeVisualSlot(
+      "neckline",
+      "넥라인 가이드",
+      "Minimal neckline diagram cards for recommended and caution neckline shapes.",
+      "얼굴형과 연결되는 넥라인 도식",
+      "neckline"
+    ),
+    makeVisualSlot(
+      "color",
+      "컬러 가이드",
+      `Premium color palette card for ${tone} and ${report.color.undertone}.`,
+      "추천 컬러 팔레트",
+      "palette"
+    ),
+    makeVisualSlot(
+      "summary",
+      "최종 요약",
+      `Final personal styling summary board using user's photo, ${persona}, hair, makeup, fashion and color.`,
+      "최종 스타일링 요약 이미지",
+      "summary",
+      report.visuals?.sourceUserImage ?? null
+    )
+  ];
+
+  return Object.fromEntries(defaults.map((visual) => [visual.id, existing.get(visual.id) ?? visual]));
 }
 
 function makeHairLength(report: ReportData) {
@@ -366,6 +485,7 @@ export function normalizeReportData(report: ReportData): ReportPageModel {
   const keywords = takeFilled(report.profile.keywords, ["세련미", "균형감", "맑은 분위기", "기억되는 무드"], 4);
   const hairLength = makeHairLength(report);
   const neckline = makeNeckline(report);
+  const sections = makeSectionVisuals(report);
 
   return {
     clientName,
@@ -373,6 +493,12 @@ export function normalizeReportData(report: ReportData): ReportPageModel {
     createdLabel: formatDate(report.createdAt),
     keywords,
     summarySentence: safeText(report.profile.summary, "사진과 취향 데이터를 함께 읽어 스타일 방향을 정리한 리포트입니다."),
+    visuals: {
+      sourceUserImage: report.visuals?.sourceUserImage ?? null,
+      heroImage: report.visuals?.heroImage ?? report.visuals?.sourceUserImage ?? null,
+      moodboardImage: report.generatedImage?.dataUrl ?? report.visuals?.generatedImageUrl ?? null,
+      sections
+    },
     overview: [
       {
         title: "Mirror Data",

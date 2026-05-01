@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { normalizeReportData, type FitCard, type ReportPageModel } from "@/lib/report-mapping";
+import type { ReportVisualSlot } from "@/lib/report-types";
 import type { ReportData } from "@/lib/report-types";
 
 const scoreLabels = {
@@ -132,6 +133,97 @@ function FitCardGrid({ cards }: { cards: FitCard[] }) {
   );
 }
 
+function VisualFrame({
+  visual,
+  data,
+  title
+}: {
+  visual: ReportVisualSlot;
+  data: ReportPageModel;
+  title?: string;
+}) {
+  const imageUrl = visual.generatedImageUrl || null;
+
+  if (imageUrl) {
+    return (
+      <figure className={`visualFrame ${visual.fallbackVisualType}`}>
+        <img src={imageUrl} alt={visual.imageCaption} />
+        <figcaption>{visual.imageCaption}</figcaption>
+      </figure>
+    );
+  }
+
+  return (
+    <figure className={`visualFrame visualFallback ${visual.fallbackVisualType}`}>
+      <div className="visualFallbackHeader">
+        <span>{title ?? visual.section}</span>
+        <small>{visual.fallbackVisualType}</small>
+      </div>
+      {visual.fallbackVisualType === "palette" ? (
+        <div className="visualPaletteBoard">
+          {data.color.palette.map((color, index) => (
+            <i key={`${color}-${index}`} style={{ background: color }} />
+          ))}
+        </div>
+      ) : visual.fallbackVisualType === "neckline" ? (
+        <div className="necklineDiagramSet">
+          {data.neckline.recommended.slice(0, 3).map((item) => (
+            <div key={item}>
+              <b />
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+      ) : visual.fallbackVisualType === "bangs" ? (
+        <div className="bangsVisualSet">
+          {data.bangs.slice(0, 5).map((item) => (
+            <div className={item.label === "추천" ? "active" : ""} key={item.title}>
+              <b />
+              <span>{item.title}</span>
+            </div>
+          ))}
+        </div>
+      ) : visual.fallbackVisualType === "makeup" || visual.fallbackVisualType === "eye" ? (
+        <div className="makeupVisualSet">
+          <i />
+          <i />
+          <i />
+          <span>{data.color.undertone}</span>
+        </div>
+      ) : visual.fallbackVisualType === "hair" ? (
+        <div className="hairVisualSet">
+          <i />
+          <b />
+          <span>{data.hairLength.recommended}</span>
+        </div>
+      ) : visual.fallbackVisualType === "summary" && data.visuals.sourceUserImage ? (
+        <img src={data.visuals.sourceUserImage} alt="분석 대표 이미지" />
+      ) : (
+        <div className="moodVisualSet">
+          {data.keywords.slice(0, 4).map((keyword) => (
+            <span key={keyword}>{keyword}</span>
+          ))}
+        </div>
+      )}
+      <figcaption>{visual.imageCaption}</figcaption>
+      <p className="visualPrompt">{visual.imagePrompt}</p>
+    </figure>
+  );
+}
+
+function VisualPointCards({ items }: { items: { title: string; body: string }[] }) {
+  return (
+    <div className="visualPointCards">
+      {items.slice(0, 3).map((item) => (
+        <article key={item.title}>
+          <span>{item.title}</span>
+          <p>{item.body}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
 function ReportCover({ report, data }: { report: ReportData; data: ReportPageModel }) {
   return (
     <section className="reportPage reportCover">
@@ -150,11 +242,17 @@ function ReportCover({ report, data }: { report: ReportData; data: ReportPageMod
             ))}
           </div>
         </div>
-        <div className="coverIdentity">
-          <div className="initialSeal">{data.clientInitial}</div>
-          <p>Prepared for</p>
-          <h3>{data.clientName}</h3>
-          <span>{report.robotName ?? "AI Styling"} / {report.source ?? "report"}</span>
+        <div className="coverIdentity coverVisualCard">
+          {data.visuals.heroImage ? (
+            <img src={data.visuals.heroImage} alt="분석에 사용된 대표 이미지" />
+          ) : (
+            <div className="initialSeal">{data.clientInitial}</div>
+          )}
+          <div>
+            <p>Prepared for</p>
+            <h3>{data.clientName}</h3>
+            <span>{report.robotName ?? "AI Styling"} / {report.source ?? "report"}</span>
+          </div>
         </div>
       </div>
       <div className="coverBottom">
@@ -197,16 +295,25 @@ function ImageDiagnosisSection({ data, report }: { data: ReportPageModel; report
       title="전체 이미지 진단"
       subtitle={data.imageDiagnosis.impression}
     >
-      <div className="diagnosisLayout">
+      <div className="diagnosisVisualLayout">
+        <VisualFrame visual={data.visuals.sections.diagnosis} data={data} title="User Image" />
         <div>
           <h3>{report.profile.summary}</h3>
-          <p>{data.imageDiagnosis.balance}</p>
+          <VisualPointCards
+            items={data.imageDiagnosis.strengths.slice(0, 3).map((item, index) => ({
+              title: `Point ${index + 1}`,
+              body: item
+            }))}
+          />
           <div className="pdfTagRow">
             {data.imageDiagnosis.mood.map((item) => (
               <span key={item}>{item}</span>
             ))}
           </div>
         </div>
+      </div>
+      <div className="diagnosisLayout">
+        <p className="editorialParagraph">{data.imageDiagnosis.balance}</p>
         <div className="scoreBook">
           {Object.entries(report.mirror.scores).map(([key, value]) => (
             <div className="scoreLine" key={key}>
@@ -218,11 +325,6 @@ function ImageDiagnosisSection({ data, report }: { data: ReportPageModel; report
             </div>
           ))}
         </div>
-      </div>
-      <div className="pdfCardGrid two">
-        {data.imageDiagnosis.strengths.map((item, index) => (
-          <SummaryCard key={item} title={`강점 ${String(index + 1).padStart(2, "0")}`} body={item} />
-        ))}
       </div>
     </ReportPage>
   );
@@ -312,11 +414,14 @@ function HairLengthGuide({ data }: { data: ReportPageModel }) {
       title="헤어 길이 가이드"
       subtitle="머리 길이는 얼굴형을 바꾸는 요소가 아니라, 얼굴 주변 여백을 어떻게 설계할지 정하는 요소입니다."
     >
-      <div className="heroGuideCard">
-        <Scissors size={24} />
-        <span>추천 길이</span>
-        <h3>{data.hairLength.recommended}</h3>
-        <p>{data.hairLength.reason}</p>
+      <div className="guideVisualSplit">
+        <VisualFrame visual={data.visuals.sections.hairLength} data={data} title="Hair Reference" />
+        <div className="heroGuideCard">
+          <Scissors size={24} />
+          <span>추천 길이</span>
+          <h3>{data.hairLength.recommended}</h3>
+          <p>{data.hairLength.reason}</p>
+        </div>
       </div>
       <div className="editorialNote">
         <Layers size={18} />
@@ -334,6 +439,7 @@ function BangsGuide({ data }: { data: ReportPageModel }) {
       title="앞머리 적합도"
       subtitle="앞머리는 인상을 크게 바꾸는 요소라서, 어울림보다 먼저 답답함이 생기지 않는지를 확인하는 것이 중요합니다."
     >
+      <VisualFrame visual={data.visuals.sections.bangs} data={data} title="Bangs Visual Guide" />
       <FitCardGrid cards={data.bangs} />
     </ReportPage>
   );
@@ -347,6 +453,7 @@ function HairAvoidGuide({ data }: { data: ReportPageModel }) {
       title="줄이면 좋은 헤어 방향"
       subtitle="어울리지 않는다는 뜻이 아니라, 현재 분위기를 더 잘 살리기 위해 강도를 조절하면 좋은 요소입니다."
     >
+      <VisualFrame visual={data.visuals.sections.hairAvoid} data={data} title="Avoid Hair Cards" />
       <div className="pdfCardGrid three">
         {data.hairAvoid.map((item) => (
           <SummaryCard key={item.title} title={item.title} body={item.body} />
@@ -364,6 +471,7 @@ function BaseMakeupGuide({ data }: { data: ReportPageModel }) {
       title="베이스 메이크업 가이드"
       subtitle="피부 표현은 화려함보다 얼굴빛이 맑게 보이는 질감과 두께가 핵심입니다."
     >
+      <VisualFrame visual={data.visuals.sections.baseMakeup} data={data} title="Base Texture" />
       <FitCardGrid cards={data.baseMakeup} />
       <div className="pdfTagRow textureTags">
         {data.color.textures.map((item) => (
@@ -382,6 +490,7 @@ function EyeMakeupGuide({ data }: { data: ReportPageModel }) {
       title="아이 메이크업 가이드"
       subtitle="눈매는 크게 바꾸기보다 선과 음영의 두께를 조절할 때 가장 자연스럽게 살아납니다."
     >
+      <VisualFrame visual={data.visuals.sections.eyeMakeup} data={data} title="Eye Makeup Direction" />
       <div className="pdfCardGrid three">
         {data.eyeMakeup.map((item) => (
           <SummaryCard key={item.title} title={item.title} body={item.body} />
@@ -416,18 +525,7 @@ function FashionMoodSection({ report, data }: { report: ReportData; data: Report
       title="패션 무드 제안"
       subtitle="옷은 얼굴 분위기를 가리는 장식이 아니라, 첫인상이 더 쉽게 읽히도록 돕는 배경입니다."
     >
-      {report.generatedImage?.dataUrl ? (
-        <figure className="moodboardFigure">
-          <img src={report.generatedImage.dataUrl} alt={report.generatedImage.alt} />
-          <figcaption>AI가 생성한 스타일 무드보드</figcaption>
-        </figure>
-      ) : (
-        <div className="moodboardFallback">
-          <Sparkles size={24} />
-          <strong>무드보드 이미지가 없는 리포트예요.</strong>
-          <span>대신 현재 분석 데이터로 스타일 방향을 세밀하게 정리했습니다.</span>
-        </div>
-      )}
+      <VisualFrame visual={data.visuals.sections.fashionMood} data={data} title="Look Moodboard" />
       <div className="moodGrid">
         {data.fashionMoods.map((item) => (
           <article className="moodCard" key={item.name}>
@@ -449,6 +547,7 @@ function NecklineGuide({ data }: { data: ReportPageModel }) {
       title="넥라인 가이드"
       subtitle={data.neckline.reason}
     >
+      <VisualFrame visual={data.visuals.sections.neckline} data={data} title="Neckline Diagram" />
       <div className="twoColumnText">
         <div>
           <h3>어울리는 넥라인</h3>
@@ -471,6 +570,7 @@ function ColorPaletteGuide({ data, report }: { data: ReportPageModel; report: Re
       title="컬러 팔레트 가이드"
       subtitle={report.recommendation.toneReason ?? data.color.note}
     >
+      <VisualFrame visual={data.visuals.sections.color} data={data} title="Color Card" />
       <div className="colorHero">
         <div>
           <span>Best Tone</span>
@@ -505,6 +605,13 @@ function FinalSummarySection({ data }: { data: ReportPageModel }) {
       title="최종 스타일링 요약"
       subtitle="전체 리포트를 실제 스타일링으로 옮길 때 가장 먼저 기억하면 좋은 핵심 공식입니다."
     >
+      <div className="summaryVisualSplit">
+        <VisualFrame visual={data.visuals.sections.summary} data={data} title="Final Signature" />
+        <div className="wideStatement">
+          <span>Next Direction</span>
+          <p>{data.finalSummary.next}</p>
+        </div>
+      </div>
       <div className="summaryMatrix">
         {summary.map((item) => {
           const Icon = item.icon;
@@ -516,10 +623,6 @@ function FinalSummarySection({ data }: { data: ReportPageModel }) {
             </article>
           );
         })}
-      </div>
-      <div className="wideStatement">
-        <span>Next Direction</span>
-        <p>{data.finalSummary.next}</p>
       </div>
     </ReportPage>
   );
